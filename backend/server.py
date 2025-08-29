@@ -378,10 +378,19 @@ class ReceiptOCRProcessor:
             items = self._extract_line_items(lines)
             
             # Build parsed data using transaction processor results
+            # Convert amount to string format for Pydantic validation
+            amount = processed_transaction.get('amount')
+            formatted_amount = None
+            if amount is not None:
+                if isinstance(amount, (int, float)):
+                    formatted_amount = f"${amount:.2f}"
+                else:
+                    formatted_amount = str(amount)
+            
             parsed_data = {
                 'merchant_name': processed_transaction.get('merchant'),
                 'receipt_date': processed_transaction.get('date'),
-                'total_amount': processed_transaction.get('amount'),
+                'total_amount': formatted_amount,
                 'items': items,
                 'confidence_score': sum(confidences) / len(confidences) if confidences else 0.0,
                 'searchable_text': full_text,
