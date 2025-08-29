@@ -124,21 +124,28 @@ def extract_date(text: str) -> Optional[str]:
         
         # Pattern 5: Textual dates like "Oct 5" or "5 Oct" or "October 5, 2024"
         for month_name, month_num in month_names.items():
-            # Format: "Oct 5" or "October 5"
-            pattern = rf'\b{re.escape(month_name)}\s+(\d{{1,2}})\b'
+            # Format: "Oct 5" or "October 5" (without year - use current year)
+            pattern = rf'\b{re.escape(month_name)}\s+(\d{{1,2}})\b(?!\s*,?\s*\d{{4}})'
             match = re.search(pattern, date_str, re.IGNORECASE)
             if match:
                 day = int(match.group(1))
-                year = current_year  # Assume current year if not specified
+                year = current_year  # Use current year
+                # But if the date would be in future, use previous year
+                test_date = date(year, month_num, day)
+                if test_date > today:
+                    year = current_year - 1
                 if validate_date(year, month_num, day):
                     return f"{year:04d}-{month_num:02d}-{day:02d}"
             
-            # Format: "5 Oct" or "5 October" 
-            pattern = rf'\b(\d{{1,2}})\s+{re.escape(month_name)}\b'
+            # Format: "5 Oct" or "5 October" (without year)
+            pattern = rf'\b(\d{{1,2}})\s+{re.escape(month_name)}\b(?!\s*\d{{4}})'
             match = re.search(pattern, date_str, re.IGNORECASE)
             if match:
                 day = int(match.group(1))
                 year = current_year
+                test_date = date(year, month_num, day)
+                if test_date > today:
+                    year = current_year - 1
                 if validate_date(year, month_num, day):
                     return f"{year:04d}-{month_num:02d}-{day:02d}"
             
