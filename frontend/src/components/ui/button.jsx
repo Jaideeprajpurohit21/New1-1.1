@@ -1,3 +1,12 @@
+/*
+ * LUMINA - AI-POWERED RECEIPT MANAGEMENT SYSTEM
+ * Button Component
+ * 
+ * Copyright (c) 2024-2025 Lumina Technologies. All rights reserved.
+ * 
+ * PROPRIETARY SOFTWARE - UNAUTHORIZED USE PROHIBITED
+ */
+
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva } from "class-variance-authority";
