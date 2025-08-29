@@ -74,6 +74,14 @@ const LuminaApp = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('dashboard');
   const [notification, setNotification] = useState(null);
+  
+  // Enhanced export filters
+  const [exportFilters, setExportFilters] = useState({
+    startDate: null,
+    endDate: null,
+    categories: []
+  });
+  const [showExportDialog, setShowExportDialog] = useState(false);
 
   // Fetch receipts from API
   const fetchReceipts = useCallback(async () => {
