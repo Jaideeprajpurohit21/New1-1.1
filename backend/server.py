@@ -109,8 +109,12 @@ class ReceiptOCRProcessor:
         self.reader = None
         self.initialize_reader()
         
-        # Auto-categorization rules
-        self.category_rules = {
+        # Initialize the advanced transaction processor
+        self.transaction_processor = TransactionProcessor()
+        logger.info("Initialized advanced transaction processor with ML-powered category prediction")
+        
+        # Legacy category rules (keeping as fallback)
+        self.legacy_category_rules = {
             'Meals & Entertainment': [
                 'starbucks', 'mcdonalds', 'cafe', 'restaurant', 'burger king', 
                 'taco bell', 'kfc', 'pizza', 'subway', 'dunkin', 'chipotle',
