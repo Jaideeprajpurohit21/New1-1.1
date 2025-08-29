@@ -127,7 +127,7 @@ const LuminaApp = () => {
   useEffect(() => {
     fetchReceipts();
     fetchCategories();
-  }, [fetchReceipts, fetchCategories]);
+  }, [fetchCategories]); // Remove fetchReceipts from dependencies since it's handled by search effect
 
   // Upload receipt
   const handleReceiptUpload = async (file, category = 'Uncategorized') => {
