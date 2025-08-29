@@ -213,7 +213,8 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Master Transaction Processor Integration"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
