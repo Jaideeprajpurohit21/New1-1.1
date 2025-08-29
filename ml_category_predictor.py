@@ -361,11 +361,16 @@ class MLCategoryPredictor:
         # Convert structured features to DataFrame
         features_df = pd.DataFrame(X_features)
         
-        # Handle categorical features
+        # Handle categorical features with one-hot encoding
         categorical_features = ['amount_bucket', 'merchant_category', 'time_pattern']
+        
+        # Convert categorical columns to strings and then one-hot encode
         for col in categorical_features:
             if col in features_df.columns:
-                features_df[col] = features_df[col].astype('category')
+                features_df[col] = features_df[col].astype(str)
+        
+        # One-hot encode categorical features
+        features_encoded = pd.get_dummies(features_df, columns=categorical_features, prefix=categorical_features)
         
         # Initialize TF-IDF vectorizer for text features
         if self.tfidf_vectorizer is None:
@@ -383,10 +388,10 @@ class MLCategoryPredictor:
         tfidf_feature_names = [f'tfidf_{name}' for name in self.tfidf_vectorizer.get_feature_names_out()]
         
         # Combine structured and text features
-        X_combined = np.hstack([features_df.values, X_text_tfidf])
+        X_combined = np.hstack([features_encoded.values, X_text_tfidf])
         
         # Store feature names
-        self.feature_names = list(features_df.columns) + tfidf_feature_names
+        self.feature_names = list(features_encoded.columns) + tfidf_feature_names
         
         # Encode labels
         if self.label_encoder is None:
