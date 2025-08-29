@@ -321,21 +321,36 @@ class ReceiptOCRProcessor:
                 r'\d{1,2}\.\d{1,2}\.\d{2,4}'
             ]
             
-            # Enhanced amount patterns to capture various receipt formats
+            # Enhanced amount patterns to capture various receipt and transaction formats
             amount_patterns = [
+                # International currency formats: INR 1,500.00, USD 29.99, EUR 15.99
+                r'(?:INR|USD|EUR|GBP|CAD|AUD)\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?',  # INR 1,500.00, USD 29.99
+                r'(?:₹|$|€|£|¥)\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?',              # ₹1,500.00, $29.99
+                
                 # Standard formats: $12.34, 12.34, $12, 12
-                r'\$\s*\d+(?:\.\d{2})?',           # $12.34, $ 12.34, $12
-                r'\d+\.\d{2}',                      # 12.34
-                r'\d+\s*\.\s*\d{2}',               # 12 . 34 (with spaces)
-                # Total formats: TOTAL: $12.34, Total $12.34, etc.
-                r'(?:TOTAL|total|Total)\s*:?\s*\$?\s*\d+(?:\.\d{2})?',  # TOTAL: $12.34
-                r'(?:AMOUNT|amount|Amount)\s*:?\s*\$?\s*\d+(?:\.\d{2})?', # AMOUNT: $12.34
-                r'(?:DUE|due|Due)\s*:?\s*\$?\s*\d+(?:\.\d{2})?',       # DUE: $12.34
-                r'(?:BALANCE|balance|Balance)\s*:?\s*\$?\s*\d+(?:\.\d{2})?', # BALANCE: $12.34
-                # Cash amounts
-                r'(?:CASH|cash|Cash)\s*:?\s*\$?\s*\d+(?:\.\d{2})?',    # CASH: $12.34
-                # Change amounts  
-                r'(?:CHANGE|change|Change)\s*:?\s*\$?\s*\d+(?:\.\d{2})?', # CHANGE: $12.34
+                r'\$\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?',                         # $12.34, $1,500.00
+                r'\d{1,3}(?:,\d{3})*\.\d{2}',                                   # 12.34, 1,500.00
+                r'\d{1,3}(?:,\d{3})*\s*\.\s*\d{2}',                           # 12 . 34, 1,500 . 00 (with spaces)
+                
+                # Transaction notification formats
+                r'(?:PURCHASE|spent|charged|debited|payment)\s+(?:INR|USD|EUR|GBP|\$|₹)\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?',  # PURCHASE INR 485.00, spent $29.99
+                r'(?:of|amount)\s+(?:INR|USD|EUR|GBP|\$|₹)\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?',  # of $15.99, amount INR 2,000.00
+                
+                # Receipt total formats: TOTAL: $12.34, Total $12.34, etc.
+                r'(?:TOTAL|total|Total)\s*:?\s*(?:INR|USD|EUR|GBP|\$|₹)?\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?',  # TOTAL: $12.34, TOTAL INR 485.00
+                r'(?:AMOUNT|amount|Amount)\s*:?\s*(?:INR|USD|EUR|GBP|\$|₹)?\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?', # AMOUNT: $12.34
+                r'(?:DUE|due|Due)\s*:?\s*(?:INR|USD|EUR|GBP|\$|₹)?\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?',       # DUE: $12.34
+                r'(?:BALANCE|balance|Balance)\s*:?\s*(?:INR|USD|EUR|GBP|\$|₹)?\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?', # BALANCE: $12.34
+                
+                # Cash and payment amounts
+                r'(?:CASH|cash|Cash)\s*:?\s*(?:INR|USD|EUR|GBP|\$|₹)?\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?',    # CASH: $12.34
+                r'(?:CHANGE|change|Change)\s*:?\s*(?:INR|USD|EUR|GBP|\$|₹)?\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?', # CHANGE: $12.34
+                
+                # Subscription and automatic payment formats
+                r'(?:subscription|monthly|automatically)\s+(?:of\s+)?(?:INR|USD|EUR|GBP|\$|₹)?\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?', # monthly subscription of $15.99
+                
+                # Basic number formats (fallback)
+                r'\d{1,3}(?:,\d{3})*(?:\.\d{2})?',                             # 1,500.00, 29.99 (basic fallback)
             ]
             
             # Keywords that typically precede or contain total amounts
