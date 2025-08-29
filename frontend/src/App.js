@@ -224,13 +224,8 @@ const LuminaApp = () => {
     return () => clearTimeout(debounceTimer);
   }, [searchTerm, selectedCategory, fetchReceipts]);
 
-  // Filter receipts
-  const filteredReceipts = receipts.filter(receipt => {
-    const matchesCategory = selectedCategory === 'All' || receipt.category === selectedCategory;
-    const matchesSearch = receipt.merchant_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         receipt.filename?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  // Stats are calculated from current receipts (already filtered by search/category)
+  // No need for client-side filtering since backend handles it
 
   // Calculate statistics
   const stats = {
