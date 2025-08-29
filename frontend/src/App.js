@@ -531,7 +531,7 @@ const StatsCard = ({ title, value, icon: Icon, gradient }) => (
 );
 
 // Receipt Card Component with enhanced features
-const ReceiptCard = ({ receipt, onCategoryUpdate, onDelete, onViewOriginal, categories, detailed = false }) => {
+const ReceiptCard = ({ receipt, onCategoryUpdate, onDelete, onViewOriginal, onOpenDetail, categories, detailed = false }) => {
   const [isUpdating, setIsUpdating] = useState(false);
 
   const getStatusBadge = (status) => {
@@ -582,8 +582,20 @@ const ReceiptCard = ({ receipt, onCategoryUpdate, onDelete, onViewOriginal, cate
     setIsUpdating(false);
   };
 
+  // Handle card click to open detailed view
+  const handleCardClick = (e) => {
+    // Don't open detail if clicking on buttons or selects
+    if (e.target.closest('button') || e.target.closest('[role="combobox"]')) {
+      return;
+    }
+    onOpenDetail(receipt);
+  };
+
   return (
-    <Card className="hover:shadow-md transition-all hover:border-blue-200">
+    <Card 
+      className="hover:shadow-md transition-all hover:border-blue-200 cursor-pointer"
+      onClick={handleCardClick}
+    >
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
@@ -670,7 +682,10 @@ const ReceiptCard = ({ receipt, onCategoryUpdate, onDelete, onViewOriginal, cate
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => onViewOriginal(receipt.id, receipt.filename)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onViewOriginal(receipt.id, receipt.filename);
+              }}
               className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
               title="View original receipt"
             >
@@ -680,7 +695,10 @@ const ReceiptCard = ({ receipt, onCategoryUpdate, onDelete, onViewOriginal, cate
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => onDelete(receipt.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(receipt.id);
+              }}
               className="text-red-600 hover:text-red-700 hover:bg-red-50"
             >
               <Trash2 className="h-4 w-4" />
