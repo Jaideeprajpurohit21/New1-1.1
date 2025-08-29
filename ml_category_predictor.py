@@ -488,8 +488,11 @@ class MLCategoryPredictor:
             return self._fallback_prediction(raw_text, merchant)
         
         try:
+            logger.info(f"Starting ML prediction for: {raw_text[:50]}...")
+            
             # Extract features
             features = self.feature_extractor.extract_features(raw_text, amount, merchant, date_str)
+            logger.info(f"Extracted {len(features)} raw features")
             
             # Convert to DataFrame to maintain feature order
             features_df = pd.DataFrame([features])
@@ -502,6 +505,7 @@ class MLCategoryPredictor:
             
             # One-hot encode categorical features (need to match training columns)
             features_encoded = pd.get_dummies(features_df, columns=categorical_features, prefix=categorical_features)
+            logger.info(f"After encoding: {features_encoded.shape[1]} structured features")
             
             # Add missing columns that were present during training
             missing_columns = []
@@ -512,18 +516,24 @@ class MLCategoryPredictor:
                     features_encoded[feature_name] = 0
                     missing_columns.append(feature_name)
             
+            logger.info(f"Added {len(missing_columns)} missing columns")
+            
             # Reorder columns to match training order
             structured_feature_names = [col for col in self.feature_names if not col.startswith('tfidf_')]
             features_encoded = features_encoded[structured_feature_names]
+            logger.info(f"Reordered to {len(structured_feature_names)} structured features")
             
             # Get TF-IDF features
             text_tfidf = self.tfidf_vectorizer.transform([raw_text]).toarray()
+            logger.info(f"TF-IDF features: {text_tfidf.shape[1]}")
             
             # Combine features
             combined_features = np.hstack([features_encoded.values, text_tfidf])
+            logger.info(f"Combined features shape: {combined_features.shape}")
             
             # Scale features
             X_scaled = self.scaler.transform(combined_features)
+            logger.info(f"Scaled features shape: {X_scaled.shape}")
             
             # Predict
             prediction = self.rf_model.predict(X_scaled)[0]
@@ -549,12 +559,14 @@ class MLCategoryPredictor:
                 'feature_count': len(self.feature_names)
             }
             
-            logger.info(f"ML prediction: {predicted_category} (confidence: {confidence:.3f})")
+            logger.info(f"ML prediction successful: {predicted_category} (confidence: {confidence:.3f})")
             
             return result
             
         except Exception as e:
             logger.error(f"Error in ML prediction: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return self._fallback_prediction(raw_text, merchant)
     
     def _fallback_prediction(self, raw_text: str, merchant: Optional[str]) -> Dict[str, Any]:
