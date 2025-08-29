@@ -218,6 +218,18 @@ const LuminaApp = () => {
     window.open(fileUrl, '_blank');
   };
 
+  // Open receipt detail modal
+  const openReceiptDetail = (receipt) => {
+    setSelectedReceipt(receipt);
+    setShowReceiptDetail(true);
+  };
+
+  // Close receipt detail modal
+  const closeReceiptDetail = () => {
+    setSelectedReceipt(null);
+    setShowReceiptDetail(false);
+  };
+
   // Real-time search with debouncing
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
