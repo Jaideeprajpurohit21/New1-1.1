@@ -1244,6 +1244,13 @@ async def get_search_suggestions(q: str = Query(..., min_length=2)):
 # Include the router in the main app
 app.include_router(api_router)
 
+# Include ML router if available
+if ML_API_AVAILABLE:
+    app.include_router(ml_router)
+    logger.info("ML API endpoints enabled")
+else:
+    logger.warning("ML API endpoints not available")
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
