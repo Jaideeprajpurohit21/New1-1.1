@@ -279,15 +279,13 @@ const LuminaApp = () => {
             
             <div className="flex items-center space-x-4">
               <UploadReceiptDialog onUpload={handleReceiptUpload} uploading={uploadingReceipt} />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={exportReceipts}
+              <ExportDialog 
+                onExport={exportReceipts}
                 disabled={receipts.length === 0}
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Export CSV
-              </Button>
+                categories={categories}
+                open={showExportDialog}
+                onOpenChange={setShowExportDialog}
+              />
             </div>
           </div>
         </div>
