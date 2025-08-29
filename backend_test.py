@@ -958,22 +958,30 @@ TOTAL $9.45"""
         return success_rate >= 0.6  # 60% success rate threshold
 
 def main():
-    print("🚀 Starting Lumina Receipt OCR API Tests")
-    print("=" * 50)
+    print("🚀 Starting Lumina Receipt OCR API Tests - Enhanced OCR Performance Testing")
+    print("=" * 80)
     
     tester = LuminaAPITester()
     
-    # Test sequence for enhanced Lumina v2.0.0 features
+    # Test sequence for enhanced Lumina v2.0.0 features with focus on OCR enhancements
     test_sequence = [
         ("API Root", tester.test_api_root),
         ("Get Categories (Empty)", tester.test_get_categories_empty),
         ("Get Receipts (Empty)", tester.test_get_receipts_empty),
         
-        # Test image upload with auto-categorization
+        # Test basic functionality first
         ("Upload Receipt (Auto-Detect)", tester.test_upload_receipt),
-        
-        # Test PDF support
         ("Upload PDF Receipt", tester.test_upload_pdf_receipt),
+        
+        # === NEW OCR ENHANCEMENT TESTS ===
+        ("🔥 GPU Acceleration & CPU Fallback", tester.test_gpu_acceleration_fallback),
+        ("🔥 Enhanced Amount Detection - Standard ($XX.XX)", tester.test_enhanced_amount_detection_standard),
+        ("🔥 Enhanced Amount Detection - TOTAL: Format", tester.test_enhanced_amount_detection_total_colon),
+        ("🔥 Enhanced Amount Detection - AMOUNT DUE: Format", tester.test_enhanced_amount_detection_amount_due),
+        ("🔥 Enhanced Amount Detection - CASH/BALANCE Format", tester.test_enhanced_amount_detection_cash_balance),
+        ("🔥 Enhanced Amount Detection - No Dollar Sign", tester.test_enhanced_amount_detection_no_dollar_sign),
+        ("🔥 OCR Processing Optimization", tester.test_ocr_processing_optimization),
+        ("🔥 Amount Standardization ($XX.XX)", tester.test_amount_standardization),
         
         # Test receipt retrieval and file viewing
         ("Get Receipt by ID", tester.test_get_receipt_by_id),
