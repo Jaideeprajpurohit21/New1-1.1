@@ -104,23 +104,20 @@ def extract_date(text: str) -> Optional[str]:
             if validate_date(year, month, day):
                 return f"{year:04d}-{month:02d}-{day:02d}"
         
-        # Pattern 3: MM/DD/YY or MM-DD-YY (US format)
+        # Pattern 3: MM/DD/YY (US format) - prefer when month <= 12 and day <= 31
         match = re.search(r'(\d{1,2})[-/](\d{1,2})[-/](\d{2})', date_str)
         if match:
-            month, day, year_short = int(match.group(1)), int(match.group(2)), int(match.group(3))
-            # Convert 2-digit year to 4-digit (assume 20xx for years 00-30, 19xx for 31-99)
+            first, second, year_short = int(match.group(1)), int(match.group(2)), int(match.group(3))
+            # Convert 2-digit year to 4-digit
             year = 2000 + year_short if year_short <= 30 else 1900 + year_short
-            if month <= 12 and validate_date(year, month, day):
-                return f"{year:04d}-{month:02d}-{day:02d}"
-        
-        # Pattern 4: DD/MM/YY or DD-MM-YY (European format)
-        match = re.search(r'(\d{1,2})[-/](\d{1,2})[-/](\d{2})', date_str)
-        if match:
-            day, month, year_short = int(match.group(1)), int(match.group(2)), int(match.group(3))
-            year = 2000 + year_short if year_short <= 30 else 1900 + year_short
-            # Only use this if day > 12 (to distinguish from US format)
-            if day > 12 and validate_date(year, month, day):
-                return f"{year:04d}-{month:02d}-{day:02d}"
+            
+            # Try MM/DD/YY first (US format)
+            if first <= 12 and second <= 31 and validate_date(year, first, second):
+                return f"{year:04d}-{first:02d}-{second:02d}"
+            
+            # Fallback to DD/MM/YY (European format) if MM/DD doesn't work
+            elif second <= 12 and first <= 31 and validate_date(year, second, first):
+                return f"{year:04d}-{second:02d}-{first:02d}"
         
         # Pattern 5: Textual dates like "Oct 5" or "5 Oct" or "October 5, 2024"
         for month_name, month_num in month_names.items():
