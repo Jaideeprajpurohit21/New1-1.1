@@ -102,7 +102,7 @@ def extract_amount(text: str) -> Optional[float]:
         
         return None
     
-    def find_amounts_near_keywords(text: str, keywords: List[str], window: int = 50) -> List[Tuple[float, int, str]]:
+    def find_amounts_near_keywords(text: str, keywords: List[str], window: int = 50) -> List[Tuple[float, int, str, int]]:
         """Find amounts near specific keywords with priority scoring"""
         amounts = []
         text_lower = text.lower()
@@ -142,9 +142,11 @@ def extract_amount(text: str) -> Optional[float]:
                         if amount is not None and amount > 0:
                             # Priority score: lower number = higher priority
                             # Distance penalty: closer to keyword = higher priority
+                            # Position penalty: earlier in text = higher priority for ties
                             distance = abs(match.start() - (pos - start_pos))
+                            position = start_pos + match.start()  # Absolute position in text
                             score = priority * 100 + distance
-                            amounts.append((amount, score, keyword))
+                            amounts.append((amount, score, keyword, position))
         
         return amounts
     
