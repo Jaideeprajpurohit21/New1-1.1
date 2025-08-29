@@ -183,7 +183,7 @@ class ReceiptOCRProcessor:
             return []
     
     async def process_receipt_file(self, file_path: str, is_pdf: bool = False) -> Dict[str, Any]:
-        """Process receipt file (image or PDF) and extract structured data"""
+        """Process receipt file (image or PDF) and extract structured data with optimized performance"""
         if not self.reader:
             return {
                 'success': False,
@@ -210,8 +210,25 @@ class ReceiptOCRProcessor:
             
             for image_path in image_paths:
                 # Run OCR processing in thread pool to avoid blocking
+                # Optimize OCR with better parameters for speed and accuracy
                 loop = asyncio.get_event_loop()
-                results = await loop.run_in_executor(None, self.reader.readtext, image_path)
+                
+                # Enhanced OCR processing with optimized parameters
+                results = await loop.run_in_executor(
+                    None, 
+                    lambda: self.reader.readtext(
+                        image_path,
+                        detail=1,                    # Return bounding box details
+                        paragraph=False,             # Don't group into paragraphs for better line detection
+                        width_ths=0.7,              # Adjusted for better text line detection
+                        height_ths=0.7,             # Adjusted for better text line detection
+                        mag_ratio=1.5,              # Increase magnification for better accuracy
+                        slope_ths=0.1,              # Better slope detection for rotated text
+                        ycenter_ths=0.5,            # Better vertical center detection
+                        add_margin=0.1              # Add margin for better text capture
+                    )
+                )
+                
                 all_results.extend(results)
                 
                 # Clean up temporary PDF conversion files
@@ -221,10 +238,11 @@ class ReceiptOCRProcessor:
                     except:
                         pass
             
-            # Extract full text
-            full_text = ' '.join([result[1] for result in all_results if result[2] > 0.3])  # Filter by confidence
+            # Extract full text with improved confidence filtering
+            # Use lower confidence threshold for better text capture, but validate in parsing
+            full_text = ' '.join([result[1] for result in all_results if result[2] > 0.2])
             
-            # Parse receipt data
+            # Parse receipt data with enhanced amount detection
             receipt_data = self.parse_receipt_text(full_text, all_results)
             receipt_data['raw_text'] = full_text
             receipt_data['success'] = True
@@ -235,6 +253,12 @@ class ReceiptOCRProcessor:
                 full_text
             )
             receipt_data['suggested_category'] = auto_category
+            
+            # Log processing results for debugging
+            logger.info(f"OCR processed successfully. Found {len(all_results)} text elements, "
+                       f"merchant: {receipt_data.get('merchant_name', 'N/A')}, "
+                       f"total: {receipt_data.get('total_amount', 'N/A')}, "
+                       f"confidence: {receipt_data.get('confidence_score', 0):.2f}")
             
             return receipt_data
             
