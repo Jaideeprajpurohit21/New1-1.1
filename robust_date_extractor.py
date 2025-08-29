@@ -285,7 +285,7 @@ def test_extract_date():
         {
             'input': "Transaction 98765 processed on Aug 23, 2024 for amount $567.89",
             'expected': "2024-08-23",
-            'description': "Month name with transaction ID and amount"
+            'description': "Month name with year specified"
         },
         {
             'input': "Wire transfer $5,000.00 on 2024/11/20. Reference: 1234567890123456",
