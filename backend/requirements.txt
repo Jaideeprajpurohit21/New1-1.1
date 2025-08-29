@@ -4,6 +4,12 @@
 # Copyright (c) 2024-2025 Lumina Technologies. All rights reserved.
 # PROPRIETARY SOFTWARE - UNAUTHORIZED USE PROHIBITED
 
+# LUMINA - AI-POWERED RECEIPT MANAGEMENT SYSTEM
+# Backend Python Dependencies
+# 
+# Copyright (c) 2024-2025 Lumina Technologies. All rights reserved.
+# PROPRIETARY SOFTWARE - UNAUTHORIZED USE PROHIBITED
+
 fastapi>=0.104.1
 uvicorn[standard]>=0.24.0
 motor>=3.3.2
