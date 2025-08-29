@@ -2450,18 +2450,31 @@ TOTAL $9.45"""
             return stability_rate > 0.5
 
 def main():
-    print("🚀 Starting Lumina Receipt OCR API Tests - Master Transaction Processor Integration Testing")
+    print("🚀 Starting Lumina ML-Enhanced Receipt OCR API Tests - Comprehensive ML System Validation")
     print("=" * 80)
     
     tester = LuminaAPITester()
     
-    # Test sequence for enhanced Lumina v2.0.0 features with focus on Master Transaction Processor
+    # Test sequence for ML-Enhanced Lumina system
     test_sequence = [
+        # Basic API tests
         ("API Root", tester.test_api_root),
         ("Get Categories (Empty)", tester.test_get_categories_empty),
         ("Get Receipts (Empty)", tester.test_get_receipts_empty),
         
-        # Test basic functionality first
+        # === ML API ENDPOINT TESTS ===
+        ("🤖 ML Health Check", tester.test_ml_health_check),
+        ("🤖 ML Status Check", tester.test_ml_status_check),
+        ("🤖 ML Direct Prediction", tester.test_ml_predict_endpoint),
+        ("🤖 ML Model Training", tester.test_ml_train_endpoint),
+        
+        # === ML-ENHANCED RECEIPT PROCESSING TESTS ===
+        ("🤖 ML-Enhanced Receipt Processing", tester.test_ml_enhanced_receipt_processing),
+        ("🤖 ML Category Prediction Accuracy", tester.test_ml_category_prediction_accuracy),
+        ("🤖 ML Confidence Scoring", tester.test_ml_confidence_scoring),
+        ("🤖 ML Feature Extraction (202+ features)", tester.test_ml_feature_extraction),
+        
+        # Test basic functionality
         ("Upload Receipt (Auto-Detect)", tester.test_upload_receipt),
         ("Upload PDF Receipt", tester.test_upload_pdf_receipt),
         
@@ -2475,6 +2488,11 @@ def main():
         ("🔥 Transaction Processor - Advanced Data Extraction", tester.test_transaction_processor_advanced_extraction),
         ("🔥 Transaction Processor - Fallback Mechanism", tester.test_transaction_processor_fallback_mechanism),
         ("🔥 Transaction Processor - 9+ Categories Support", tester.test_transaction_processor_nine_plus_categories),
+        
+        # === ML SYSTEM PERFORMANCE TESTS ===
+        ("🤖 ML System Performance", tester.test_ml_system_performance),
+        ("🤖 ML Fallback Mechanism", tester.test_ml_fallback_mechanism),
+        ("🤖 ML Integration Stability", tester.test_ml_integration_stability),
         
         # === EXISTING OCR ENHANCEMENT TESTS ===
         ("🔥 GPU Acceleration & CPU Fallback", tester.test_gpu_acceleration_fallback),
@@ -2516,34 +2534,38 @@ def main():
         except Exception as e:
             print(f"❌ Test '{test_name}' crashed: {str(e)}")
     
-    # Print results with Master Transaction Processor focus
+    # Print results with ML focus
     print("\n" + "=" * 80)
     print(f"📊 Test Results: {tester.tests_passed}/{tester.tests_run} tests passed")
     
-    # Calculate Master Transaction Processor test results
+    # Calculate ML-specific test results
+    ml_tests = [name for name, _ in test_sequence if "🤖" in name]
     transaction_processor_tests = [name for name, _ in test_sequence if "Transaction Processor" in name]
     ocr_tests = [name for name, _ in test_sequence if "🔥" in name and "Transaction Processor" not in name]
     
-    print(f"🔥 Master Transaction Processor Tests: {len(transaction_processor_tests)} specialized tests run")
+    print(f"🤖 ML System Tests: {len(ml_tests)} specialized ML tests run")
+    print(f"🔥 Master Transaction Processor Tests: {len(transaction_processor_tests)} integration tests run")
     print(f"🔥 OCR Enhancement Tests: {len(ocr_tests)} additional tests run")
     
     if tester.tests_passed == tester.tests_run:
-        print("🎉 All tests passed! Master Transaction Processor integration is working correctly.")
-        print("✅ Advanced category prediction with ML-powered system")
-        print("✅ Enhanced merchant, amount, date extraction")
-        print("✅ Confidence scoring and categorization methods")
-        print("✅ Support for 9+ categories (Dining, Groceries, Transportation, etc.)")
-        print("✅ Fallback mechanisms functioning properly")
-        print("✅ API response format includes new fields")
+        print("🎉 ALL TESTS PASSED! ML-Enhanced Lumina System is fully operational.")
+        print("✅ ML API endpoints working (/api/ml/health, /api/ml/status, /api/ml/predict, /api/ml/train)")
+        print("✅ Advanced ML category prediction with Random Forest model")
+        print("✅ 202+ feature extraction system working")
+        print("✅ ML-powered receipt processing with confidence scoring")
+        print("✅ Enhanced transaction processing with ML integration")
+        print("✅ Support for 10+ categories with ML accuracy")
+        print("✅ ML fallback mechanisms functioning properly")
+        print("✅ System performance and stability validated")
         return 0
     else:
         failed_count = tester.tests_run - tester.tests_passed
         print(f"⚠️  {failed_count} tests failed")
         
         if failed_count <= 3:
-            print("🟡 Minor issues detected - Master Transaction Processor mostly functional")
+            print("🟡 Minor issues detected - ML-Enhanced system mostly functional")
         else:
-            print("🔴 Multiple issues detected - Master Transaction Processor may need attention")
+            print("🔴 Multiple issues detected - ML system may need attention")
         
         return 1
 
