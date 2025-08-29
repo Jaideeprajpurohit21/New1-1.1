@@ -426,30 +426,54 @@ const LuminaApp = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Expense Analytics</CardTitle>
-                <CardDescription>Breakdown of your expenses by category</CardDescription>
+                <CardDescription>AI-powered insights and expense breakdown by category</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {categories.map(category => {
-                    const categoryReceipts = receipts.filter(r => r.category === category.name);
-                    const categoryTotal = categoryReceipts.reduce((sum, r) => {
-                      const amount = parseFloat(r.total_amount?.replace(/[$,]/g, '') || '0');
-                      return sum + amount;
-                    }, 0);
+                    const categoryTotal = category.total_amount || 0;
                     const percentage = stats.totalAmount > 0 ? (categoryTotal / stats.totalAmount) * 100 : 0;
 
                     return (
                       <div key={category.name} className="space-y-2">
                         <div className="flex justify-between items-center">
-                          <span className="font-medium">{category.name}</span>
+                          <div className="flex items-center space-x-2">
+                            <span className="font-medium">{category.name}</span>
+                            {category.name !== 'Uncategorized' && (
+                              <Bot className="w-4 h-4 text-purple-500" title="AI Categorized" />
+                            )}
+                          </div>
                           <span className="text-sm text-slate-500">
-                            ${categoryTotal.toFixed(2)} ({percentage.toFixed(1)}%)
+                            ${categoryTotal.toFixed(2)} ({percentage.toFixed(1)}%) • {category.count} receipts
                           </span>
                         </div>
                         <Progress value={percentage} className="h-2" />
                       </div>
                     );
                   })}
+                </div>
+                
+                {/* Additional Analytics */}
+                <div className="mt-6 pt-6 border-t">
+                  <h4 className="text-sm font-medium text-slate-700 mb-4">Quick Insights</h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="bg-green-50 p-3 rounded-lg">
+                      <div className="text-green-800 font-medium">Processing Accuracy</div>
+                      <div className="text-green-600">
+                        {receipts.length > 0 
+                          ? Math.round((receipts.filter(r => r.confidence_score > 0.8).length / receipts.length) * 100) 
+                          : 0}% high confidence
+                      </div>
+                    </div>
+                    <div className="bg-purple-50 p-3 rounded-lg">
+                      <div className="text-purple-800 font-medium">AI Categorization</div>
+                      <div className="text-purple-600">
+                        {receipts.length > 0 
+                          ? Math.round((receipts.filter(r => r.category !== 'Uncategorized').length / receipts.length) * 100) 
+                          : 0}% auto-categorized
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
