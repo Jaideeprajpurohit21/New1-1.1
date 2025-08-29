@@ -41,8 +41,8 @@ import {
   Eye,
   ExternalLink,
   Filter,
-  FileImage,
-  FilePdf,
+  Image as FileImage,
+  FileText as FilePdf,
   Bot,
   Sparkles
 } from 'lucide-react';
