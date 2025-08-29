@@ -409,12 +409,13 @@ const LuminaApp = () => {
                   <EmptyState onUpload={handleReceiptUpload} uploading={uploadingReceipt} />
                 ) : (
                   <div className="space-y-4">
-                    {filteredReceipts.map(receipt => (
+                    {receipts.map(receipt => (
                       <ReceiptCard
                         key={receipt.id}
                         receipt={receipt}
                         onCategoryUpdate={updateReceiptCategory}
                         onDelete={deleteReceipt}
+                        onViewOriginal={viewOriginalReceipt}
                         categories={categories}
                         detailed
                       />
