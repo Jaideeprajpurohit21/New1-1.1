@@ -2,6 +2,8 @@ import requests
 import sys
 import json
 import io
+import tempfile
+import os
 from datetime import datetime
 from pathlib import Path
 
@@ -12,6 +14,7 @@ class LuminaAPITester:
         self.tests_run = 0
         self.tests_passed = 0
         self.receipt_id = None
+        self.pdf_receipt_id = None
 
     def run_test(self, name, method, endpoint, expected_status, data=None, files=None, response_type='json'):
         """Run a single API test"""
