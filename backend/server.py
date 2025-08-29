@@ -404,7 +404,7 @@ class ReceiptOCRProcessor:
                             amount_match = re.search(pattern, original_text, re.IGNORECASE)
                             if amount_match and any(keyword in text for keyword in total_keywords):
                                 amount_text = amount_match.group()
-                                cleaned_amount = self._clean_amount_text(amount_text)
+                                cleaned_amount = self._extract_transaction_amount_robust(amount_text)
                                 if cleaned_amount:
                                     parsed_data['total_amount'] = cleaned_amount
                                     break
