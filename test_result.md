@@ -164,6 +164,7 @@ test_plan:
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
+  frontend_testing_needed: true
 
 agent_communication:
   - agent: "main"
