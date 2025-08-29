@@ -150,7 +150,7 @@ def extract_amount(text: str) -> Optional[float]:
         
         return amounts
     
-    def find_standalone_currency_amounts(text: str) -> List[Tuple[float, int, str]]:
+    def find_standalone_currency_amounts(text: str) -> List[Tuple[float, int, str, int]]:
         """Find standalone currency amounts as fallback"""
         amounts = []
         
@@ -174,7 +174,7 @@ def extract_amount(text: str) -> Optional[float]:
                 amount = extract_numeric_amount(match.group())
                 if amount is not None and amount > 0:
                     # Lower priority for standalone amounts
-                    amounts.append((amount, 1000, 'standalone'))
+                    amounts.append((amount, 1000, 'standalone', match.start()))
         
         return amounts
     
