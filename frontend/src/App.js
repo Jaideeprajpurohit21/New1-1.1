@@ -427,6 +427,7 @@ const LuminaApp = () => {
                         onCategoryUpdate={updateReceiptCategory}
                         onDelete={deleteReceipt}
                         onViewOriginal={viewOriginalReceipt}
+                        onOpenDetail={openReceiptDetail}
                         categories={categories}
                         detailed
                       />
