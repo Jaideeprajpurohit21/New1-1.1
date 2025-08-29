@@ -701,32 +701,7 @@ async def get_categories():
     """Get all unique categories with counts"""
     try:
         pipeline = [
-            {
-                "$addFields": {
-                    "amount_numeric": {
-                        "$cond": {
-                            "if": {"$and": [{"$ne": ["$total_amount", None]}, {"$ne": ["$total_amount", ""]}]},
-                            "then": {
-                                "$toDouble": {
-                                    "$replaceAll": {
-                                        "input": "$total_amount",
-                                        "find": "$",
-                                        "replacement": ""
-                                    }
-                                }
-                            },
-                            "else": 0
-                        }
-                    }
-                }
-            },
-            {
-                "$group": {
-                    "_id": "$category", 
-                    "count": {"$sum": 1}, 
-                    "total_amount": {"$sum": "$amount_numeric"}
-                }
-            },
+            {"$group": {"_id": "$category", "count": {"$sum": 1}}},
             {"$sort": {"count": -1}}
         ]
         categories = await db.receipts.aggregate(pipeline).to_list(length=None)
