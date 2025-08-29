@@ -157,7 +157,7 @@ TOTAL $11.60"""
             return io.BytesIO(text_content.encode())
 
     def test_upload_receipt(self):
-        """Test uploading a receipt"""
+        """Test uploading a receipt with Auto-Detect category"""
         try:
             # Create test image
             test_image = self.create_test_image()
@@ -166,11 +166,11 @@ TOTAL $11.60"""
                 'file': ('test_receipt.png', test_image, 'image/png')
             }
             data = {
-                'category': 'Meals'
+                'category': 'Auto-Detect'  # Test AI auto-categorization
             }
             
             success, response = self.run_test(
-                "Upload Receipt",
+                "Upload Receipt (Auto-Detect)",
                 "POST",
                 "receipts/upload",
                 200,
@@ -184,6 +184,8 @@ TOTAL $11.60"""
                 print(f"   Processing Status: {response.get('processing_status')}")
                 print(f"   Merchant: {response.get('merchant_name')}")
                 print(f"   Total: {response.get('total_amount')}")
+                print(f"   Auto-categorized as: {response.get('category')}")
+                print(f"   Original file path: {response.get('original_file_path')}")
             
             return success
             
