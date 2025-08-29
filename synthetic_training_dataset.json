@@ -1,0 +1,737 @@
+[
+  {
+    "raw_text": "Netflix monthly subscription of $15.99 was automatically charged on 2024-10-05. Your card ending in 4567 was used.",
+    "true_amount": 15.99,
+    "true_date": "2024-10-05",
+    "true_category": "Entertainment",
+    "key_merchant": "Netflix",
+    "key_features": [
+      "monthly_recurring_amount",
+      "subscription_keywords",
+      "auto_payment",
+      "small_amount_bucket",
+      "streaming_service",
+      "round_subscription_price"
+    ]
+  },
+  {
+    "raw_text": "Alfamart PURCHASE INR 1,247.50 on 15-08-2024 at 18:30. Store #045 Delhi. Avl bal INR 15,678.90.",
+    "true_amount": 1247.50,
+    "true_date": "2024-08-15",
+    "true_category": "Groceries",
+    "key_merchant": "Alfamart",
+    "key_features": [
+      "evening_shopping_time",
+      "medium_amount_bucket",
+      "purchase_keyword",
+      "store_number_pattern",
+      "grocery_chain",
+      "card_present_transaction"
+    ]
+  },
+  {
+    "raw_text": "Electricity Bill Payment of INR 3,456.00 to State Power Board on 2024-09-20 successful. Ref: EPB2024920456.",
+    "true_amount": 3456.00,
+    "true_date": "2024-09-20",
+    "true_category": "Utilities",
+    "key_merchant": "State Power Board",
+    "key_features": [
+      "bill_payment_keywords",
+      "large_amount_bucket",
+      "round_number_pattern",
+      "utility_provider",
+      "reference_number",
+      "monthly_bill_timing"
+    ]
+  },
+  {
+    "raw_text": "Starbucks Coffee charged $8.45 on Oct 15 at 7:23 AM. Store: Downtown Seattle. Order #SC789123.",
+    "true_amount": 8.45,
+    "true_date": "2024-10-15",
+    "true_category": "Dining",
+    "key_merchant": "Starbucks",
+    "key_features": [
+      "morning_rush_time",
+      "micro_amount_bucket",
+      "coffee_chain",
+      "order_number",
+      "location_indicator",
+      "breakfast_timing"
+    ]
+  },
+  {
+    "raw_text": "Uber ride payment of $23.67 on 2024-11-08. Trip from Airport to Downtown. Rating: 5 stars.",
+    "true_amount": 23.67,
+    "true_date": "2024-11-08",
+    "true_category": "Transportation",
+    "key_merchant": "Uber",
+    "key_features": [
+      "small_amount_bucket",
+      "ride_sharing",
+      "airport_travel_context",
+      "trip_details",
+      "transportation_keywords",
+      "irregular_amount"
+    ]
+  },
+  {
+    "raw_text": "Amazon order #114-7890123-4567890 shipped. Charge: $127.99 on 2024-12-03. Prime delivery.",
+    "true_amount": 127.99,
+    "true_date": "2024-12-03",
+    "true_category": "Shopping",
+    "key_merchant": "Amazon",
+    "key_features": [
+      "medium_amount_bucket",
+      "order_number_pattern",
+      "online_shopping",
+      "december_holiday_shopping",
+      "prime_service",
+      "shipping_keywords"
+    ]
+  },
+  {
+    "raw_text": "Spotify Premium monthly charge $9.99 auto-renewed on 2024-09-15. Next billing: Oct 15.",
+    "true_amount": 9.99,
+    "true_date": "2024-09-15",
+    "true_category": "Entertainment",
+    "key_merchant": "Spotify",
+    "key_features": [
+      "micro_amount_bucket",
+      "subscription_pricing",
+      "auto_renewal",
+      "monthly_recurring",
+      "music_streaming",
+      "next_billing_indicator"
+    ]
+  },
+  {
+    "raw_text": "Shell Gas Station #4567 charged $65.40 on 18/07/24 at 17:45. Pump #3. Fuel: 12.5 gallons.",
+    "true_amount": 65.40,
+    "true_date": "2024-07-18",
+    "true_category": "Transportation",
+    "key_merchant": "Shell",
+    "key_features": [
+      "evening_commute_time",
+      "medium_amount_bucket",
+      "gas_station_indicators",
+      "pump_number",
+      "fuel_quantity",
+      "station_number"
+    ]
+  },
+  {
+    "raw_text": "McDonald's Drive Thru $12.34 charged on 2024-08-20 at 12:15 PM. Store #8901 Highway Location.",
+    "true_amount": 12.34,
+    "true_date": "2024-08-20",
+    "true_category": "Dining",
+    "key_merchant": "McDonald's",
+    "key_features": [
+      "lunch_time",
+      "small_amount_bucket",
+      "fast_food_chain",
+      "drive_thru_indicator",
+      "store_number",
+      "highway_location"
+    ]
+  },
+  {
+    "raw_text": "Internet Bill Due: Comcast $89.99 on 2024-10-01. Auto-pay from checking account ending 2345.",
+    "true_amount": 89.99,
+    "true_date": "2024-10-01",
+    "true_category": "Utilities",
+    "key_merchant": "Comcast",
+    "key_features": [
+      "medium_amount_bucket",
+      "monthly_bill_timing",
+      "internet_service",
+      "auto_pay_indicator",
+      "subscription_pricing",
+      "due_date_language"
+    ]
+  },
+  {
+    "raw_text": "Apple App Store purchase $2.99 on Nov 12, 2024. App: Premium Calculator Pro. Invoice: M12345.",
+    "true_amount": 2.99,
+    "true_date": "2024-11-12",
+    "true_category": "Entertainment",
+    "key_merchant": "Apple App Store",
+    "key_features": [
+      "micro_amount_bucket",
+      "app_purchase",
+      "digital_content",
+      "invoice_number",
+      "premium_upgrade",
+      "mobile_payment"
+    ]
+  },
+  {
+    "raw_text": "Walmart Supercenter purchase $156.78 on 2024-09-07 at 19:30. Receipt: 1234-5678-9012.",
+    "true_amount": 156.78,
+    "true_date": "2024-09-07",
+    "true_category": "Groceries",
+    "key_merchant": "Walmart",
+    "key_features": [
+      "evening_shopping",
+      "medium_amount_bucket",
+      "grocery_retailer",
+      "receipt_number",
+      "supercenter_indicator",
+      "weekend_shopping"
+    ]
+  },
+  {
+    "raw_text": "UPI Payment to Zomato of ₹485.00 on 14-10-2024 at 20:15. Order ID: ZOM789456. Food delivered.",
+    "true_amount": 485.00,
+    "true_date": "2024-10-14",
+    "true_category": "Dining",
+    "key_merchant": "Zomato",
+    "key_features": [
+      "dinner_time",
+      "small_amount_bucket",
+      "upi_payment_method",
+      "food_delivery",
+      "order_id_pattern",
+      "evening_dining"
+    ]
+  },
+  {
+    "raw_text": "Tesla Supercharger $34.56 charged on 2024-11-20. Location: Highway Rest Stop Mile 245. Session: 45 min.",
+    "true_amount": 34.56,
+    "true_date": "2024-11-20",
+    "true_category": "Transportation",
+    "key_merchant": "Tesla Supercharger",
+    "key_features": [
+      "small_amount_bucket",
+      "ev_charging",
+      "highway_travel",
+      "session_duration",
+      "mile_marker",
+      "rest_stop_location"
+    ]
+  },
+  {
+    "raw_text": "Microsoft Office 365 annual subscription $99.99 renewed on 2024-01-15. Valid until Jan 2025.",
+    "true_amount": 99.99,
+    "true_date": "2024-01-15",
+    "true_category": "Subscriptions",
+    "key_merchant": "Microsoft",
+    "key_features": [
+      "medium_amount_bucket",
+      "annual_subscription",
+      "software_service",
+      "renewal_indicator",
+      "subscription_pricing",
+      "validity_period"
+    ]
+  },
+  {
+    "raw_text": "CVS Pharmacy prescription pickup $25.00 copay on Oct 8, 2024. RX#: 1234567. Insurance processed.",
+    "true_amount": 25.00,
+    "true_date": "2024-10-08",
+    "true_category": "Healthcare",
+    "key_merchant": "CVS Pharmacy",
+    "key_features": [
+      "small_amount_bucket",
+      "round_copay_amount",
+      "prescription_number",
+      "pharmacy_chain",
+      "insurance_indicator",
+      "healthcare_service"
+    ]
+  },
+  {
+    "raw_text": "Delta Airlines flight booking $456.78 on 2024-06-15. Flight: DL1234 SEA-LAX. Confirmation: ABC123.",
+    "true_amount": 456.78,
+    "true_date": "2024-06-15",
+    "true_category": "Travel",
+    "key_merchant": "Delta Airlines",
+    "key_features": [
+      "large_amount_bucket",
+      "flight_booking",
+      "airport_codes",
+      "confirmation_number",
+      "airline_service",
+      "summer_travel_booking"
+    ]
+  },
+  {
+    "raw_text": "Bank Transfer to John Smith $500.00 on 2024-11-03. Ref: P2P-78901. Memo: Rent payment.",
+    "true_amount": 500.00,
+    "true_date": "2024-11-03",
+    "true_category": "Transfer",
+    "key_merchant": "John Smith",
+    "key_features": [
+      "large_amount_bucket",
+      "round_number",
+      "p2p_transfer",
+      "personal_name",
+      "rent_payment_memo",
+      "beginning_of_month"
+    ]
+  },
+  {
+    "raw_text": "Target RedCard purchase $78.92 on 2024-12-18 at 15:30. Store #T-0456. Holiday returns eligible.",
+    "true_amount": 78.92,
+    "true_date": "2024-12-18",
+    "true_category": "Shopping",
+    "key_merchant": "Target",
+    "key_features": [
+      "medium_amount_bucket",
+      "afternoon_shopping",
+      "store_card_payment",
+      "store_number",
+      "december_holiday_shopping",
+      "return_policy_mention"
+    ]
+  },
+  {
+    "raw_text": "Gym Plus membership fee $45.00 monthly charge on 2024-08-01. Auto-renewal active. Member #G789.",
+    "true_amount": 45.00,
+    "true_date": "2024-08-01",
+    "true_category": "Healthcare",
+    "key_merchant": "Gym Plus",
+    "key_features": [
+      "small_amount_bucket",
+      "monthly_membership",
+      "round_number",
+      "auto_renewal",
+      "member_number",
+      "fitness_service"
+    ]
+  },
+  {
+    "raw_text": "Dunkin' Donuts morning order $6.75 on Sept 25, 2024 at 8:10 AM. Store: Downtown Boston. Mobile order.",
+    "true_amount": 6.75,
+    "true_date": "2024-09-25",
+    "true_category": "Dining",
+    "key_merchant": "Dunkin' Donuts",
+    "key_features": [
+      "morning_rush_time",
+      "micro_amount_bucket",
+      "coffee_chain",
+      "mobile_order",
+      "downtown_location",
+      "breakfast_timing"
+    ]
+  },
+  {
+    "raw_text": "Steam game purchase $29.99 on 2024-10-31. Game: Horror Adventure Pack. Wallet payment used.",
+    "true_amount": 29.99,
+    "true_date": "2024-10-31",
+    "true_category": "Entertainment",
+    "key_merchant": "Steam",
+    "key_features": [
+      "small_amount_bucket",
+      "gaming_platform",
+      "halloween_timing",
+      "digital_wallet",
+      "game_purchase",
+      "subscription_pricing"
+    ]
+  },
+  {
+    "raw_text": "Costco Wholesale $234.67 on 2024-07-14 at 11:00 AM. Membership #12345678. Bulk shopping weekend.",
+    "true_amount": 234.67,
+    "true_date": "2024-07-14",
+    "true_category": "Groceries",
+    "key_merchant": "Costco",
+    "key_features": [
+      "large_amount_bucket",
+      "weekend_shopping",
+      "membership_number",
+      "wholesale_retailer",
+      "bulk_shopping",
+      "mid_morning_time"
+    ]
+  },
+  {
+    "raw_text": "Lyft ride $18.25 on 2024-09-30 at 23:45. Route: Bar District to Home. Tip included: $3.00.",
+    "true_amount": 18.25,
+    "true_date": "2024-09-30",
+    "true_category": "Transportation",
+    "key_merchant": "Lyft",
+    "key_features": [
+      "small_amount_bucket",
+      "late_night_ride",
+      "entertainment_district",
+      "tip_included",
+      "ride_sharing",
+      "weekend_night"
+    ]
+  },
+  {
+    "raw_text": "Adobe Creative Suite monthly $52.99 charged on 2024-11-10. Professional plan. Invoice: ADO456789.",
+    "true_amount": 52.99,
+    "true_date": "2024-11-10",
+    "true_category": "Subscriptions",
+    "key_merchant": "Adobe",
+    "key_features": [
+      "medium_amount_bucket",
+      "creative_software",
+      "professional_plan",
+      "monthly_subscription",
+      "invoice_number",
+      "business_tool"
+    ]
+  },
+  {
+    "raw_text": "Home Depot store #1234 purchase $167.45 on 2024-06-22 at 16:20. Project: Kitchen renovation.",
+    "true_amount": 167.45,
+    "true_date": "2024-06-22",
+    "true_category": "Shopping",
+    "key_merchant": "Home Depot",
+    "key_features": [
+      "medium_amount_bucket",
+      "afternoon_shopping",
+      "home_improvement",
+      "store_number",
+      "project_description",
+      "weekend_diy"
+    ]
+  },
+  {
+    "raw_text": "Verizon Wireless bill $125.00 due 2024-08-15. Account ending 7890. Auto-pay scheduled.",
+    "true_amount": 125.00,
+    "true_date": "2024-08-15",
+    "true_category": "Utilities",
+    "key_merchant": "Verizon",
+    "key_features": [
+      "medium_amount_bucket",
+      "round_number",
+      "wireless_service",
+      "monthly_bill",
+      "auto_pay_scheduled",
+      "account_number_partial"
+    ]
+  },
+  {
+    "raw_text": "Whole Foods Market organic groceries $89.34 on Oct 20, 2024 at 17:00. Prime member discount applied.",
+    "true_amount": 89.34,
+    "true_date": "2024-10-20",
+    "true_category": "Groceries",
+    "key_merchant": "Whole Foods",
+    "key_features": [
+      "medium_amount_bucket",
+      "evening_shopping",
+      "organic_grocery",
+      "prime_member_benefit",
+      "premium_retailer",
+      "discount_applied"
+    ]
+  },
+  {
+    "raw_text": "Marriott Hotel booking $189.50 per night on 2024-12-05. Check-in: Dec 15. Confirmation: MAR78901.",
+    "true_amount": 189.50,
+    "true_date": "2024-12-05",
+    "true_category": "Travel",
+    "key_merchant": "Marriott",
+    "key_features": [
+      "medium_amount_bucket",
+      "hotel_booking",
+      "per_night_pricing",
+      "future_checkin",
+      "december_travel",
+      "confirmation_code"
+    ]
+  },
+  {
+    "raw_text": "Gas bill payment $78.90 to City Gas Company on 2024-11-25. Winter heating season. Ref: GAS112024.",
+    "true_amount": 78.90,
+    "true_date": "2024-11-25",
+    "true_category": "Utilities",
+    "key_merchant": "City Gas Company",
+    "key_features": [
+      "medium_amount_bucket",
+      "utility_payment",
+      "seasonal_heating",
+      "winter_bill",
+      "reference_number",
+      "monthly_utility"
+    ]
+  },
+  {
+    "raw_text": "Chipotle Mexican Grill $14.68 on 2024-09-12 at 13:25. Order: Burrito Bowl. Store #CH567.",
+    "true_amount": 14.68,
+    "true_date": "2024-09-12",
+    "true_category": "Dining",
+    "key_merchant": "Chipotle",
+    "key_features": [
+      "lunch_time",
+      "small_amount_bucket",
+      "fast_casual_chain",
+      "specific_order_item",
+      "store_number",
+      "weekday_lunch"
+    ]
+  },
+  {
+    "raw_text": "YouTube Premium family plan $17.99 monthly on 2024-10-20. 6 members included. Auto-renewal on.",
+    "true_amount": 17.99,
+    "true_date": "2024-10-20",
+    "true_category": "Entertainment",
+    "key_merchant": "YouTube",
+    "key_features": [
+      "small_amount_bucket",
+      "family_plan",
+      "video_streaming",
+      "member_count",
+      "auto_renewal",
+      "monthly_subscription"
+    ]
+  },
+  {
+    "raw_text": "Best Buy electronics purchase $299.99 on 2024-11-28. Black Friday sale. Item: Wireless headphones.",
+    "true_amount": 299.99,
+    "true_date": "2024-11-28",
+    "true_category": "Shopping",
+    "key_merchant": "Best Buy",
+    "key_features": [
+      "large_amount_bucket",
+      "black_friday_timing",
+      "electronics_retailer",
+      "sale_event",
+      "specific_item",
+      "holiday_shopping"
+    ]
+  },
+  {
+    "raw_text": "Parking meter payment $3.50 on Sept 18, 2024 at 14:15. Zone: Downtown District 5. Duration: 2 hours.",
+    "true_amount": 3.50,
+    "true_date": "2024-09-18",
+    "true_category": "Transportation",
+    "key_merchant": "Parking Meter",
+    "key_features": [
+      "micro_amount_bucket",
+      "afternoon_parking",
+      "downtown_location",
+      "zone_indicator",
+      "duration_specified",
+      "municipal_service"
+    ]
+  },
+  {
+    "raw_text": "Walgreens pharmacy $42.99 on 2024-08-30. Prescription refill #RX789456. Insurance copay processed.",
+    "true_amount": 42.99,
+    "true_date": "2024-08-30",
+    "true_category": "Healthcare",
+    "key_merchant": "Walgreens",
+    "key_features": [
+      "small_amount_bucket",
+      "prescription_refill",
+      "pharmacy_chain",
+      "rx_number",
+      "insurance_copay",
+      "healthcare_expense"
+    ]
+  },
+  {
+    "raw_text": "Dropbox Plus storage plan $9.99 monthly renewed on 2024-07-01. 2TB cloud storage included.",
+    "true_amount": 9.99,
+    "true_date": "2024-07-01",
+    "true_category": "Subscriptions",
+    "key_merchant": "Dropbox",
+    "key_features": [
+      "micro_amount_bucket",
+      "cloud_storage",
+      "monthly_renewal",
+      "storage_capacity",
+      "business_tool",
+      "subscription_pricing"
+    ]
+  },
+  {
+    "raw_text": "Panera Bread lunch order $11.45 on 2024-12-10 at 12:30 PM. Rapid pickup ready. Order #PB12345.",
+    "true_amount": 11.45,
+    "true_date": "2024-12-10",
+    "true_category": "Dining",
+    "key_merchant": "Panera Bread",
+    "key_features": [
+      "lunch_time",
+      "small_amount_bucket",
+      "fast_casual_chain",
+      "rapid_pickup",
+      "order_number",
+      "weekday_lunch"
+    ]
+  },
+  {
+    "raw_text": "Airbnb booking $156.00 per night on 2024-05-20. Location: Austin, TX. Check-in: June 15-18.",
+    "true_amount": 156.00,
+    "true_date": "2024-05-20",
+    "true_category": "Travel",
+    "key_merchant": "Airbnb",
+    "key_features": [
+      "medium_amount_bucket",
+      "vacation_rental",
+      "per_night_pricing",
+      "city_location",
+      "future_checkin",
+      "multi_day_booking"
+    ]
+  },
+  {
+    "raw_text": "Planet Fitness membership $10.00 monthly charge on 2024-09-01. Black Card member. Gym #PF456.",
+    "true_amount": 10.00,
+    "true_date": "2024-09-01",
+    "true_category": "Healthcare",
+    "key_merchant": "Planet Fitness",
+    "key_features": [
+      "micro_amount_bucket",
+      "round_number",
+      "gym_membership",
+      "membership_tier",
+      "gym_number",
+      "monthly_recurring"
+    ]
+  },
+  {
+    "raw_text": "Kroger Plus Card purchase $67.23 on 2024-08-25 at 18:45. Fuel points earned: 67. Receipt #K789012.",
+    "true_amount": 67.23,
+    "true_date": "2024-08-25",
+    "true_category": "Groceries",
+    "key_merchant": "Kroger",
+    "key_features": [
+      "medium_amount_bucket",
+      "evening_shopping",
+      "loyalty_card",
+      "fuel_points_program",
+      "receipt_number",
+      "grocery_chain"
+    ]
+  },
+  {
+    "raw_text": "H&R Block tax preparation $199.00 on 2024-02-28. Federal + State return. E-file included.",
+    "true_amount": 199.00,
+    "true_date": "2024-02-28",
+    "true_category": "Subscriptions",
+    "key_merchant": "H&R Block",
+    "key_features": [
+      "medium_amount_bucket",
+      "tax_season_timing",
+      "professional_service",
+      "round_number",
+      "tax_preparation",
+      "e_file_service"
+    ]
+  },
+  {
+    "raw_text": "Capital One credit card payment $1,250.00 on 2024-11-15. Account ending 4567. Statement balance paid.",
+    "true_amount": 1250.00,
+    "true_date": "2024-11-15",
+    "true_category": "Transfer",
+    "key_merchant": "Capital One",
+    "key_features": [
+      "xlarge_amount_bucket",
+      "round_number",
+      "credit_card_payment",
+      "statement_balance",
+      "account_partial",
+      "mid_month_payment"
+    ]
+  },
+  {
+    "raw_text": "Taco Bell drive-thru $8.97 on Oct 3, 2024 at 21:30. Late night menu. Store #TB901.",
+    "true_amount": 8.97,
+    "true_date": "2024-10-03",
+    "true_category": "Dining",
+    "key_merchant": "Taco Bell",
+    "key_features": [
+      "micro_amount_bucket",
+      "late_night_dining",
+      "drive_thru",
+      "fast_food_chain",
+      "store_number",
+      "night_menu"
+    ]
+  },
+  {
+    "raw_text": "Disney Plus annual subscription $79.99 renewed on 2024-12-20. Valid until Dec 2025. Family bundle.",
+    "true_amount": 79.99,
+    "true_date": "2024-12-20",
+    "true_category": "Entertainment",
+    "key_merchant": "Disney Plus",
+    "key_features": [
+      "medium_amount_bucket",
+      "annual_subscription",
+      "streaming_service",
+      "family_bundle",
+      "december_renewal",
+      "subscription_pricing"
+    ]
+  },
+  {
+    "raw_text": "Shell V-Power fuel $72.80 on 2024-10-28 at 07:45. Premium unleaded. Station #S4567 Highway 101.",
+    "true_amount": 72.80,
+    "true_date": "2024-10-28",
+    "true_category": "Transportation",
+    "key_merchant": "Shell",
+    "key_features": [
+      "medium_amount_bucket",
+      "morning_commute",
+      "premium_fuel",
+      "highway_location",
+      "station_number",
+      "fuel_grade_specified"
+    ]
+  },
+  {
+    "raw_text": "REI Co-op outdoor gear $187.50 on 2024-06-05. Member dividend eligible. Item: Hiking backpack 65L.",
+    "true_amount": 187.50,
+    "true_date": "2024-06-05",
+    "true_category": "Shopping",
+    "key_merchant": "REI",
+    "key_features": [
+      "medium_amount_bucket",
+      "outdoor_retailer",
+      "member_benefits",
+      "seasonal_gear",
+      "specific_item",
+      "summer_preparation"
+    ]
+  },
+  {
+    "raw_text": "UberEats delivery fee $4.99 + order $28.50 on 2024-11-12 at 19:20. Restaurant: Thai Palace. Tip: $5.00.",
+    "true_amount": 38.49,
+    "true_date": "2024-11-12",
+    "true_category": "Dining",
+    "key_merchant": "UberEats",
+    "key_features": [
+      "small_amount_bucket",
+      "dinner_delivery",
+      "delivery_fee_breakdown",
+      "restaurant_name",
+      "tip_included",
+      "food_delivery_app"
+    ]
+  },
+  {
+    "raw_text": "AT&T wireless upgrade $45.00 monthly device payment on 2024-09-25. iPhone 15 Pro. 24-month plan.",
+    "true_amount": 45.00,
+    "true_date": "2024-09-25",
+    "true_category": "Utilities",
+    "key_merchant": "AT&T",
+    "key_features": [
+      "small_amount_bucket",
+      "device_payment_plan",
+      "monthly_installment",
+      "specific_device",
+      "contract_length",
+      "wireless_service"
+    ]
+  },
+  {
+    "raw_text": "Trader Joe's organic produce $43.67 on 2024-07-30 at 16:15. Eco-friendly bag credit: -$0.10.",
+    "true_amount": 43.57,
+    "true_date": "2024-07-30",
+    "true_category": "Groceries",
+    "key_merchant": "Trader Joe's",
+    "key_features": [
+      "small_amount_bucket",
+      "afternoon_shopping",
+      "organic_specialty",
+      "eco_credit",
+      "specialty_grocery",
+      "environmental_discount"
+    ]
+  }
+]
