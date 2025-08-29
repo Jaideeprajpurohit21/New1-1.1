@@ -58,12 +58,16 @@ def extract_date(text: str) -> Optional[str]:
             # Check if date is valid
             test_date = date(year, month, day)
             
-            # Date should not be in the future (allow up to 1 day for timezone differences)
+            # Date should not be more than 1 day in the future (timezone tolerance)
             if test_date > today:
                 return False
             
-            # Date should not be too old (transactions older than 10 years are unlikely)
-            if year < current_year - 10:
+            # Date should not be too old (transactions older than 7 years are unlikely)
+            if year < current_year - 7:
+                return False
+                
+            # Additional validation for 2-digit years
+            if year < 2000:  # Reject dates interpreted as 19xx
                 return False
             
             return True
