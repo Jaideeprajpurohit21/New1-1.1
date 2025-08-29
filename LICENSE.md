@@ -6,9 +6,9 @@
 
 ## COPYRIGHT NOTICE
 
-© 2024-2025 Lumina Technologies. All Rights Reserved.
+© 2024 Jaideep Singh Rajpurohit. All Rights Reserved.
 
-This software and associated documentation files (the "Software") are the exclusive property of Lumina Technologies and are protected by copyright laws and international copyright treaties, as well as other intellectual property laws and treaties.
+This software and associated documentation files (the "Software") are the exclusive property of Jaideep Singh Rajpurohit and are protected by copyright laws and international copyright treaties, as well as other intellectual property laws and treaties.
 
 ## LICENSE TERMS
 
@@ -22,9 +22,9 @@ This Software is licensed, not sold. By installing, copying, or otherwise using 
 
 2. **No Reverse Engineering**: You may not reverse engineer, decompile, disassemble, or otherwise attempt to derive the source code of the Software.
 
-3. **No Commercial Use**: The Software may not be used for any commercial purposes without explicit written permission from Lumina Technologies.
+3. **No Commercial Use**: The Software may not be used for any commercial purposes without explicit written permission from Jaideep Singh Rajpurohit.
 
-4. **Confidentiality**: The Software contains confidential and proprietary information of Lumina Technologies. You agree to maintain the confidentiality of such information.
+4. **Confidentiality**: The Software contains confidential and proprietary information of Jaideep Singh Rajpurohit. You agree to maintain the confidentiality of such information.
 
 ### INTELLECTUAL PROPERTY
 
@@ -35,7 +35,7 @@ All rights, title, and interest in and to the Software, including but not limite
 - Documentation and specifications
 - Trademarks and service marks
 
-remain exclusively with Lumina Technologies.
+remain exclusively with Jaideep Singh Rajpurohit.
 
 ### DISCLAIMER OF WARRANTIES
 
@@ -43,21 +43,21 @@ THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIE
 
 ### LIMITATION OF LIABILITY
 
-IN NO EVENT SHALL LUMINA TECHNOLOGIES BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+IN NO EVENT SHALL JAIDEEP SINGH RAJPUROHIT BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### TERMINATION
 
-This license is effective until terminated. Lumina Technologies may terminate this license at any time without notice. Upon termination, you must destroy all copies of the Software in your possession.
+This license is effective until terminated. Jaideep Singh Rajpurohit may terminate this license at any time without notice. Upon termination, you must destroy all copies of the Software in your possession.
 
 ### GOVERNING LAW
 
-This agreement shall be governed by and construed in accordance with the laws of the jurisdiction in which Lumina Technologies is incorporated, without regard to its conflict of law provisions.
+This agreement shall be governed by and construed in accordance with the laws of the jurisdiction in which Jaideep Singh Rajpurohit resides, without regard to its conflict of law provisions.
 
 ---
 
 **For licensing inquiries, please contact:**
 
-Lumina Technologies  
+Jaideep Singh Rajpurohit  
 Email: legal@luminatech.com  
 Website: www.luminatech.com
 

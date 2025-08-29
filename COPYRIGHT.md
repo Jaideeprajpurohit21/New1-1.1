@@ -4,7 +4,7 @@
 
 ## COPYRIGHT OWNERSHIP
 
-© 2024-2025 **Lumina Technologies**. All Rights Reserved.
+© 2024 **Jaideep Singh Rajpurohit**. All Rights Reserved.
 
 ## COVERED MATERIALS
 
@@ -70,8 +70,7 @@ Any unauthorized use, including but not limited to:
 
 ## CONTACT INFORMATION
 
-**Lumina Technologies**  
-Legal Department  
+**Jaideep Singh Rajpurohit**  
 Email: legal@luminatech.com  
 Website: www.luminatech.com
 

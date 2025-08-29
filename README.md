@@ -2,7 +2,7 @@
 
 # LUMINA - AI-Powered Receipt Management System
 
-**© 2024-2025 Lumina Technologies. All Rights Reserved.**
+**© 2024 Jaideep Singh Rajpurohit. All Rights Reserved.**
 
 ---
 
@@ -10,7 +10,7 @@
 
 **THIS SOFTWARE IS PROPRIETARY AND CONFIDENTIAL**
 
-- This software contains trade secrets and proprietary information of Lumina Technologies
+- This software contains trade secrets and proprietary information of Jaideep Singh Rajpurohit
 - Unauthorized copying, distribution, or use is strictly prohibited
 - All rights reserved under copyright laws and international treaties
 - Violation of these terms may result in severe civil and criminal penalties
@@ -40,10 +40,10 @@ Lumina is an advanced AI-powered SaaS application designed for automated expense
 ## 🛡️ Legal Notice
 
 ### COPYRIGHT PROTECTION
-This software and all associated materials are protected by copyright law. The software contains confidential and proprietary information that is the exclusive property of Lumina Technologies.
+This software and all associated materials are protected by copyright law. The software contains confidential and proprietary information that is the exclusive property of Jaideep Singh Rajpurohit.
 
 ### TRADE SECRET PROTECTION  
-This software contains valuable trade secrets and proprietary algorithms developed by Lumina Technologies. Any unauthorized disclosure or use of these trade secrets is prohibited.
+This software contains valuable trade secrets and proprietary algorithms developed by Jaideep Singh Rajpurohit. Any unauthorized disclosure or use of these trade secrets is prohibited.
 
 ### LICENSING
 This software is available only under a proprietary license agreement. See [LICENSE.md](LICENSE.md) for complete terms and conditions.
@@ -52,7 +52,7 @@ This software is available only under a proprietary license agreement. See [LICE
 
 ## ⚖️ LEGAL DISCLAIMER
 
-THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. LUMINA TECHNOLOGIES SHALL NOT BE LIABLE FOR ANY DAMAGES ARISING FROM THE USE OF THIS SOFTWARE.
+THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. JAIDEEP SINGH RAJPUROHIT SHALL NOT BE LIABLE FOR ANY DAMAGES ARISING FROM THE USE OF THIS SOFTWARE.
 
 **For licensing inquiries contact: legal@luminatech.com**
 

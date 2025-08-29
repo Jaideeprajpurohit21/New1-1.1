@@ -101,11 +101,12 @@ Completed: December 29, 2024
 
 All requested copyright and proprietary protection measures have been successfully implemented across the entire Lumina codebase. The software is now comprehensively protected under intellectual property law with clear legal documentation and warnings.
 
+**Copyright Owner**: Jaideep Singh Rajpurohit  
 **Implementation Date**: December 29, 2024  
 **Protection Level**: Maximum Proprietary Protection  
 **Legal Status**: Fully Compliant
 
 ---
 
-**CONFIDENTIAL - LUMINA TECHNOLOGIES**  
+**CONFIDENTIAL - JAIDEEP SINGH RAJPUROHIT**  
 **ALL RIGHTS RESERVED**
