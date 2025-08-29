@@ -2045,29 +2045,34 @@ def main():
         except Exception as e:
             print(f"❌ Test '{test_name}' crashed: {str(e)}")
     
-    # Print results with OCR enhancement focus
+    # Print results with Master Transaction Processor focus
     print("\n" + "=" * 80)
     print(f"📊 Test Results: {tester.tests_passed}/{tester.tests_run} tests passed")
     
-    # Calculate OCR enhancement test results
-    ocr_tests = [name for name, _ in test_sequence if "🔥" in name]
-    print(f"🔥 OCR Enhancement Tests: {len(ocr_tests)} specialized tests run")
+    # Calculate Master Transaction Processor test results
+    transaction_processor_tests = [name for name, _ in test_sequence if "Transaction Processor" in name]
+    ocr_tests = [name for name, _ in test_sequence if "🔥" in name and "Transaction Processor" not in name]
+    
+    print(f"🔥 Master Transaction Processor Tests: {len(transaction_processor_tests)} specialized tests run")
+    print(f"🔥 OCR Enhancement Tests: {len(ocr_tests)} additional tests run")
     
     if tester.tests_passed == tester.tests_run:
-        print("🎉 All tests passed! OCR enhancements are working correctly.")
-        print("✅ GPU acceleration and CPU fallback functioning")
-        print("✅ Enhanced amount detection patterns working")
-        print("✅ OCR processing optimization active")
-        print("✅ Amount standardization to $XX.XX format working")
+        print("🎉 All tests passed! Master Transaction Processor integration is working correctly.")
+        print("✅ Advanced category prediction with ML-powered system")
+        print("✅ Enhanced merchant, amount, date extraction")
+        print("✅ Confidence scoring and categorization methods")
+        print("✅ Support for 9+ categories (Dining, Groceries, Transportation, etc.)")
+        print("✅ Fallback mechanisms functioning properly")
+        print("✅ API response format includes new fields")
         return 0
     else:
         failed_count = tester.tests_run - tester.tests_passed
         print(f"⚠️  {failed_count} tests failed")
         
-        if failed_count <= 2:
-            print("🟡 Minor issues detected - OCR enhancements mostly functional")
+        if failed_count <= 3:
+            print("🟡 Minor issues detected - Master Transaction Processor mostly functional")
         else:
-            print("🔴 Multiple issues detected - OCR enhancements may need attention")
+            print("🔴 Multiple issues detected - Master Transaction Processor may need attention")
         
         return 1
 
