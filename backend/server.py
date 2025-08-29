@@ -375,21 +375,28 @@ class ReceiptOCRProcessor:
                             parsed_data['receipt_date'] = date_match.group()
                             break
                 
-                # Enhanced total amount detection
+                # Enhanced total amount detection using robust extraction
                 if not parsed_data['total_amount']:
-                    # First check if line contains total keywords
-                    if any(keyword in text for keyword in total_keywords):
-                        # Try each amount pattern
-                        for pattern in amount_patterns:
-                            amount_match = re.search(pattern, original_text, re.IGNORECASE)
-                            if amount_match:
-                                amount_text = amount_match.group()
-                                # Clean and extract just the numeric amount
-                                cleaned_amount = self._clean_amount_text(amount_text)
-                                if cleaned_amount:
-                                    parsed_data['total_amount'] = cleaned_amount
-                                    logger.info(f"Found total amount: {cleaned_amount} from text: {original_text}")
-                                    break
+                    # Try robust extraction first
+                    robust_amount = self._extract_transaction_amount_robust(full_text)
+                    if robust_amount:
+                        parsed_data['total_amount'] = robust_amount
+                        logger.info(f"Found total amount via robust extraction: {robust_amount} from text: {full_text[:100]}...")
+                    else:
+                        # Fallback to pattern-based extraction
+                        # First check if line contains total keywords
+                        if any(keyword in text for keyword in total_keywords):
+                            # Try each amount pattern
+                            for pattern in amount_patterns:
+                                amount_match = re.search(pattern, original_text, re.IGNORECASE)
+                                if amount_match:
+                                    amount_text = amount_match.group()
+                                    # Use robust amount extraction for this match too
+                                    cleaned_amount = self._extract_transaction_amount_robust(amount_text)
+                                    if cleaned_amount:
+                                        parsed_data['total_amount'] = cleaned_amount
+                                        logger.info(f"Found total amount via pattern: {cleaned_amount} from text: {original_text}")
+                                        break
                     
                     # If still no total found, try to find any dollar amount in lines with total keywords
                     if not parsed_data['total_amount']:
