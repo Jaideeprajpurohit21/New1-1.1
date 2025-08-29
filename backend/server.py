@@ -367,13 +367,19 @@ class ReceiptOCRProcessor:
                     if not re.search(r'\d', text) and not any(keyword in text for keyword in total_keywords):
                         parsed_data['merchant_name'] = original_text.strip()
                 
-                # Look for dates
+                # Look for dates using robust extraction
                 if not parsed_data['receipt_date']:
-                    for date_pattern in date_patterns:
-                        date_match = re.search(date_pattern, text)
-                        if date_match:
-                            parsed_data['receipt_date'] = date_match.group()
-                            break
+                    robust_date = self._extract_transaction_date_robust(full_text)
+                    if robust_date:
+                        parsed_data['receipt_date'] = robust_date
+                        logger.info(f"Found receipt date via robust extraction: {robust_date}")
+                    else:
+                        # Fallback to pattern-based extraction
+                        for date_pattern in date_patterns:
+                            date_match = re.search(date_pattern, text)
+                            if date_match:
+                                parsed_data['receipt_date'] = date_match.group()
+                                break
                 
                 # Enhanced total amount detection using robust extraction
                 if not parsed_data['total_amount']:
