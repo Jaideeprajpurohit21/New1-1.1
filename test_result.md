@@ -192,7 +192,8 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "OCR GPU acceleration and enhanced amount detection"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
