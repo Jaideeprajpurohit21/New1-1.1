@@ -338,22 +338,3 @@ if __name__ == "__main__":
         print("\n🎉 All tests passed! The extract_amount function is robust and ready.")
     else:
         print("\n⚠️ Some tests failed. Review the function logic.")
-    
-    # Interactive testing
-    print("\n" + "=" * 70)
-    print("🔧 Interactive Testing:")
-    print("Enter transaction text to test (or 'quit' to exit):")
-    
-    while True:
-        try:
-            user_input = input("\n> ")
-            if user_input.lower() in ['quit', 'exit', 'q']:
-                break
-            
-            if user_input.strip():
-                result = extract_amount(user_input)
-                print(f"Extracted amount: {result}")
-            
-        except KeyboardInterrupt:
-            print("\nGoodbye!")
-            break
