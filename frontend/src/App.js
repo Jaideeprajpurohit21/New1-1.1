@@ -497,6 +497,19 @@ const LuminaApp = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Receipt Detail Modal */}
+      {selectedReceipt && (
+        <ReceiptDetailModal
+          receipt={selectedReceipt}
+          open={showReceiptDetail}
+          onOpenChange={closeReceiptDetail}
+          onViewOriginal={viewOriginalReceipt}
+          onCategoryUpdate={updateReceiptCategory}
+          onDelete={deleteReceipt}
+          categories={categories}
+        />
+      )}
     </div>
   );
 };
