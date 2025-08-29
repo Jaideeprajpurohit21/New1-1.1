@@ -172,22 +172,68 @@ class ReceiptOCRProcessor:
             logger.error(f"Error initializing EasyOCR: {str(e)}")
             self.reader = None
     
-    def auto_categorize(self, merchant_name: str, raw_text: str) -> str:
-        """Automatically categorize receipt based on merchant name and text"""
+    def auto_categorize(self, merchant_name: str, raw_text: str) -> Dict[str, Any]:
+        """Advanced categorization using transaction processor with confidence scoring"""
+        try:
+            # Use transaction processor for advanced category prediction
+            full_text = f"{merchant_name or ''} {raw_text or ''}".strip()
+            if not full_text:
+                return {
+                    'category': 'Uncategorized',
+                    'confidence': 0.0,
+                    'method': 'default'
+                }
+            
+            # Get prediction from transaction processor
+            result = self.transaction_processor.process_transaction(full_text)
+            
+            category = result.get('category', 'Uncategorized')
+            confidence = result.get('confidence', 0.0)
+            
+            logger.info(f"Advanced auto-categorization: '{category}' (confidence: {confidence:.3f}) "
+                       f"for merchant: {merchant_name}, text: {raw_text[:50]}...")
+            
+            return {
+                'category': category,
+                'confidence': confidence,
+                'method': 'advanced_ml',
+                'merchant': result.get('merchant'),
+                'processing_status': result.get('processing_status', 'completed')
+            }
+            
+        except Exception as e:
+            logger.error(f"Error in advanced categorization: {str(e)}")
+            # Fallback to legacy categorization
+            return self._legacy_auto_categorize(merchant_name, raw_text)
+    
+    def _legacy_auto_categorize(self, merchant_name: str, raw_text: str) -> Dict[str, Any]:
+        """Legacy categorization method as fallback"""
         if not merchant_name and not raw_text:
-            return "Uncategorized"
+            return {
+                'category': 'Uncategorized',
+                'confidence': 0.0,
+                'method': 'legacy_fallback'
+            }
         
         # Combine merchant name and raw text for analysis
         analysis_text = f"{merchant_name or ''} {raw_text or ''}".lower()
         
         # Check each category's keywords
-        for category, keywords in self.category_rules.items():
+        for category, keywords in self.legacy_category_rules.items():
             for keyword in keywords:
                 if keyword in analysis_text:
-                    logger.info(f"Auto-categorized as '{category}' based on keyword '{keyword}'")
-                    return category
+                    logger.info(f"Legacy auto-categorized as '{category}' based on keyword '{keyword}'")
+                    return {
+                        'category': category,
+                        'confidence': 0.8,  # High confidence for direct keyword matches
+                        'method': 'legacy_keywords'
+                    }
         
-        return "Uncategorized"
+        return {
+            'category': 'Uncategorized',
+            'confidence': 0.0,
+            'method': 'legacy_fallback'
+        }
     
     async def convert_pdf_to_images(self, pdf_path: str) -> List[str]:
         """Convert PDF pages to images for OCR processing"""
