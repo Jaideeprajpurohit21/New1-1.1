@@ -604,9 +604,21 @@ class MLCategoryPredictor:
                 self.feature_names = model_data.get('feature_names')
                 self.is_trained = model_data.get('is_trained', False)
                 
-                if self.is_trained:
+                # Check if all components are loaded
+                components_loaded = all([
+                    self.rf_model is not None,
+                    self.tfidf_vectorizer is not None,
+                    self.scaler is not None,
+                    self.label_encoder is not None,
+                    self.feature_names is not None
+                ])
+                
+                if components_loaded:
+                    self.is_trained = True
                     logger.info("Pre-trained model loaded successfully")
                     return True
+                else:
+                    logger.warning("Some model components missing")
             
         except Exception as e:
             logger.error(f"Error loading model: {str(e)}")
