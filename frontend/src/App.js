@@ -1,3 +1,20 @@
+/*
+ * LUMINA - AI-POWERED RECEIPT MANAGEMENT SYSTEM
+ * Frontend Application Component
+ * 
+ * Copyright (c) 2024-2025 Lumina Technologies. All rights reserved.
+ * 
+ * PROPRIETARY SOFTWARE - UNAUTHORIZED USE PROHIBITED
+ * This software contains confidential and proprietary information of Lumina Technologies.
+ * Any reproduction, distribution, or transmission of this software, in whole or in part,
+ * without the prior written consent of Lumina Technologies is strictly prohibited.
+ * 
+ * Trade secrets contained herein are protected under applicable laws.
+ * Unauthorized disclosure may result in civil and criminal prosecution.
+ * 
+ * For licensing information, contact: legal@luminatech.com
+ */
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import axios from 'axios';
@@ -710,6 +727,231 @@ const ReceiptCard = ({ receipt, onCategoryUpdate, onDelete, onViewOriginal, onOp
   );
 };
 
+// Receipt Detail Modal Component
+const ReceiptDetailModal = ({ receipt, open, onOpenChange, onViewOriginal, onCategoryUpdate, onDelete, categories }) => {
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'completed':
+        return <Badge className="bg-green-100 text-green-800">
+          <CheckCircle className="w-3 h-3 mr-1" />
+          Processed
+        </Badge>;
+      case 'processing':
+        return <Badge className="bg-blue-100 text-blue-800">
+          <Clock className="w-3 h-3 mr-1" />
+          Processing
+        </Badge>;
+      case 'failed':
+        return <Badge className="bg-red-100 text-red-800">
+          <AlertCircle className="w-3 h-3 mr-1" />
+          Failed
+        </Badge>;
+      default:
+        return <Badge className="bg-gray-100 text-gray-800">Pending</Badge>;
+    }
+  };
+
+  const getFileIcon = (filename) => {
+    const extension = filename.split('.').pop().toLowerCase();
+    if (extension === 'pdf') {
+      return <FilePdf className="h-6 w-6 text-red-500" />;
+    }
+    return <FileImage className="h-6 w-6 text-blue-500" />;
+  };
+
+  const handleCategoryUpdate = async (newCategory) => {
+    setIsUpdating(true);
+    await onCategoryUpdate(receipt.id, newCategory);
+    setIsUpdating(false);
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return 'Not available';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return dateStr;
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <div className="flex items-center space-x-3">
+            {getFileIcon(receipt.filename)}
+            <div>
+              <DialogTitle className="text-xl">{receipt.filename}</DialogTitle>
+              <DialogDescription className="flex items-center space-x-2 mt-1">
+                {getStatusBadge(receipt.processing_status)}
+                {receipt.category !== 'Uncategorized' && (
+                  <div className="flex items-center space-x-1">
+                    <Bot className="w-3 h-3 text-purple-500" />
+                    <span className="text-xs text-purple-700">Auto-categorized</span>
+                  </div>
+                )}
+              </DialogDescription>
+            </div>
+          </div>
+        </DialogHeader>
+
+        <div className="space-y-6">
+          {/* Basic Information */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-4">
+              <div>
+                <Label className="text-sm font-medium text-slate-700">Merchant Name</Label>
+                <p className="text-base text-slate-900 mt-1">
+                  {receipt.merchant_name || 'Not detected'}
+                </p>
+              </div>
+              
+              <div>
+                <Label className="text-sm font-medium text-slate-700">Receipt Date</Label>
+                <p className="text-base text-slate-900 mt-1 flex items-center space-x-2">
+                  <CalendarIcon className="h-4 w-4 text-slate-500" />
+                  <span>{receipt.receipt_date || 'Not detected'}</span>
+                </p>
+              </div>
+              
+              <div>
+                <Label className="text-sm font-medium text-slate-700">Upload Date</Label>
+                <p className="text-base text-slate-900 mt-1 flex items-center space-x-2">
+                  <Clock className="h-4 w-4 text-slate-500" />
+                  <span>{formatDate(receipt.upload_date)}</span>
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <Label className="text-sm font-medium text-slate-700">Total Amount</Label>
+                <p className="text-2xl font-bold text-slate-900 mt-1 flex items-center space-x-2">
+                  <DollarSign className="h-5 w-5 text-green-600" />
+                  <span className="text-green-600">{receipt.total_amount || 'Not detected'}</span>
+                </p>
+              </div>
+              
+              <div>
+                <Label className="text-sm font-medium text-slate-700">Processing Confidence</Label>
+                <p className="text-base text-slate-900 mt-1">
+                  {receipt.confidence_score ? `${Math.round(receipt.confidence_score * 100)}%` : 'N/A'}
+                </p>
+              </div>
+              
+              <div>
+                <Label className="text-sm font-medium text-slate-700 mb-2 block">Category</Label>
+                <Select
+                  value={receipt.category}
+                  onValueChange={handleCategoryUpdate}
+                  disabled={isUpdating}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Auto-Detect">🤖 Auto-Detect</SelectItem>
+                    <SelectItem value="Meals & Entertainment">🍽️ Meals & Entertainment</SelectItem>
+                    <SelectItem value="Groceries">🛒 Groceries</SelectItem>
+                    <SelectItem value="Transportation & Fuel">🚗 Transportation & Fuel</SelectItem>
+                    <SelectItem value="Office Supplies">📎 Office Supplies</SelectItem>
+                    <SelectItem value="Shopping">🛍️ Shopping</SelectItem>
+                    <SelectItem value="Utilities">⚡ Utilities</SelectItem>
+                    <SelectItem value="Healthcare">🏥 Healthcare</SelectItem>
+                    <SelectItem value="Travel">✈️ Travel</SelectItem>
+                    <SelectItem value="Uncategorized">📂 Uncategorized</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Items List */}
+          {receipt.items && receipt.items.length > 0 && (
+            <div>
+              <Label className="text-sm font-medium text-slate-700 mb-3 block">Detected Items</Label>
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {receipt.items.map((item, index) => (
+                  <div key={item.id || index} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                    <div className="flex-1">
+                      <span className="text-sm text-slate-900">{item.description}</span>
+                      {item.confidence && (
+                        <span className="ml-2 text-xs text-slate-500">
+                          ({Math.round(item.confidence * 100)}% confidence)
+                        </span>
+                      )}
+                    </div>
+                    {item.amount && (
+                      <span className="text-sm font-medium text-slate-900">{item.amount}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Raw OCR Text */}
+          {receipt.raw_text && (
+            <div>
+              <Label className="text-sm font-medium text-slate-700 mb-2 block">Raw OCR Text</Label>
+              <div className="bg-slate-50 p-4 rounded-lg max-h-32 overflow-y-auto">
+                <p className="text-sm text-slate-700 whitespace-pre-wrap">{receipt.raw_text}</p>
+              </div>
+            </div>
+          )}
+
+          <Separator />
+
+          {/* Action Buttons */}
+          <div className="flex justify-between items-center">
+            <div className="flex space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => onViewOriginal(receipt.id, receipt.filename)}
+                className="flex items-center space-x-2"
+              >
+                <Eye className="h-4 w-4" />
+                <span>View Original Receipt</span>
+              </Button>
+            </div>
+            
+            <div className="flex space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+              >
+                Close
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  onDelete(receipt.id);
+                  onOpenChange(false);
+                }}
+                className="flex items-center space-x-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                <span>Delete Receipt</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 // Enhanced Upload Receipt Dialog with PDF support
 const UploadReceiptDialog = ({ onUpload, uploading }) => {
   const [open, setOpen] = useState(false);
@@ -1006,231 +1248,6 @@ const ExportDialog = ({ onExport, disabled, categories, open, onOpenChange }) =>
               <Download className="w-4 h-4 mr-2" />
               Export CSV
             </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
-// Receipt Detail Modal Component
-const ReceiptDetailModal = ({ receipt, open, onOpenChange, onViewOriginal, onCategoryUpdate, onDelete, categories }) => {
-  const [isUpdating, setIsUpdating] = useState(false);
-
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'completed':
-        return <Badge className="bg-green-100 text-green-800">
-          <CheckCircle className="w-3 h-3 mr-1" />
-          Processed
-        </Badge>;
-      case 'processing':
-        return <Badge className="bg-blue-100 text-blue-800">
-          <Clock className="w-3 h-3 mr-1" />
-          Processing
-        </Badge>;
-      case 'failed':
-        return <Badge className="bg-red-100 text-red-800">
-          <AlertCircle className="w-3 h-3 mr-1" />
-          Failed
-        </Badge>;
-      default:
-        return <Badge className="bg-gray-100 text-gray-800">Pending</Badge>;
-    }
-  };
-
-  const getFileIcon = (filename) => {
-    const extension = filename.split('.').pop().toLowerCase();
-    if (extension === 'pdf') {
-      return <FilePdf className="h-6 w-6 text-red-500" />;
-    }
-    return <FileImage className="h-6 w-6 text-blue-500" />;
-  };
-
-  const handleCategoryUpdate = async (newCategory) => {
-    setIsUpdating(true);
-    await onCategoryUpdate(receipt.id, newCategory);
-    setIsUpdating(false);
-  };
-
-  const formatDate = (dateStr) => {
-    if (!dateStr) return 'Not available';
-    try {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } catch {
-      return dateStr;
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="flex items-center space-x-3">
-            {getFileIcon(receipt.filename)}
-            <div>
-              <DialogTitle className="text-xl">{receipt.filename}</DialogTitle>
-              <DialogDescription className="flex items-center space-x-2 mt-1">
-                {getStatusBadge(receipt.processing_status)}
-                {receipt.category !== 'Uncategorized' && (
-                  <div className="flex items-center space-x-1">
-                    <Bot className="w-3 h-3 text-purple-500" />
-                    <span className="text-xs text-purple-700">Auto-categorized</span>
-                  </div>
-                )}
-              </DialogDescription>
-            </div>
-          </div>
-        </DialogHeader>
-
-        <div className="space-y-6">
-          {/* Basic Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-4">
-              <div>
-                <Label className="text-sm font-medium text-slate-700">Merchant Name</Label>
-                <p className="text-base text-slate-900 mt-1">
-                  {receipt.merchant_name || 'Not detected'}
-                </p>
-              </div>
-              
-              <div>
-                <Label className="text-sm font-medium text-slate-700">Receipt Date</Label>
-                <p className="text-base text-slate-900 mt-1 flex items-center space-x-2">
-                  <CalendarIcon className="h-4 w-4 text-slate-500" />
-                  <span>{receipt.receipt_date || 'Not detected'}</span>
-                </p>
-              </div>
-              
-              <div>
-                <Label className="text-sm font-medium text-slate-700">Upload Date</Label>
-                <p className="text-base text-slate-900 mt-1 flex items-center space-x-2">
-                  <Clock className="h-4 w-4 text-slate-500" />
-                  <span>{formatDate(receipt.upload_date)}</span>
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <Label className="text-sm font-medium text-slate-700">Total Amount</Label>
-                <p className="text-2xl font-bold text-slate-900 mt-1 flex items-center space-x-2">
-                  <DollarSign className="h-5 w-5 text-green-600" />
-                  <span className="text-green-600">{receipt.total_amount || 'Not detected'}</span>
-                </p>
-              </div>
-              
-              <div>
-                <Label className="text-sm font-medium text-slate-700">Processing Confidence</Label>
-                <p className="text-base text-slate-900 mt-1">
-                  {receipt.confidence_score ? `${Math.round(receipt.confidence_score * 100)}%` : 'N/A'}
-                </p>
-              </div>
-              
-              <div>
-                <Label className="text-sm font-medium text-slate-700 mb-2 block">Category</Label>
-                <Select
-                  value={receipt.category}
-                  onValueChange={handleCategoryUpdate}
-                  disabled={isUpdating}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Auto-Detect">🤖 Auto-Detect</SelectItem>
-                    <SelectItem value="Meals & Entertainment">🍽️ Meals & Entertainment</SelectItem>
-                    <SelectItem value="Groceries">🛒 Groceries</SelectItem>
-                    <SelectItem value="Transportation & Fuel">🚗 Transportation & Fuel</SelectItem>
-                    <SelectItem value="Office Supplies">📎 Office Supplies</SelectItem>
-                    <SelectItem value="Shopping">🛍️ Shopping</SelectItem>
-                    <SelectItem value="Utilities">⚡ Utilities</SelectItem>
-                    <SelectItem value="Healthcare">🏥 Healthcare</SelectItem>
-                    <SelectItem value="Travel">✈️ Travel</SelectItem>
-                    <SelectItem value="Uncategorized">📂 Uncategorized</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Items List */}
-          {receipt.items && receipt.items.length > 0 && (
-            <div>
-              <Label className="text-sm font-medium text-slate-700 mb-3 block">Detected Items</Label>
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {receipt.items.map((item, index) => (
-                  <div key={item.id || index} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
-                    <div className="flex-1">
-                      <span className="text-sm text-slate-900">{item.description}</span>
-                      {item.confidence && (
-                        <span className="ml-2 text-xs text-slate-500">
-                          ({Math.round(item.confidence * 100)}% confidence)
-                        </span>
-                      )}
-                    </div>
-                    {item.amount && (
-                      <span className="text-sm font-medium text-slate-900">{item.amount}</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Raw OCR Text */}
-          {receipt.raw_text && (
-            <div>
-              <Label className="text-sm font-medium text-slate-700 mb-2 block">Raw OCR Text</Label>
-              <div className="bg-slate-50 p-4 rounded-lg max-h-32 overflow-y-auto">
-                <p className="text-sm text-slate-700 whitespace-pre-wrap">{receipt.raw_text}</p>
-              </div>
-            </div>
-          )}
-
-          <Separator />
-
-          {/* Action Buttons */}
-          <div className="flex justify-between items-center">
-            <div className="flex space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => onViewOriginal(receipt.id, receipt.filename)}
-                className="flex items-center space-x-2"
-              >
-                <Eye className="h-4 w-4" />
-                <span>View Original Receipt</span>
-              </Button>
-            </div>
-            
-            <div className="flex space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-              >
-                Close
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={() => {
-                  onDelete(receipt.id);
-                  onOpenChange(false);
-                }}
-                className="flex items-center space-x-2"
-              >
-                <Trash2 className="h-4 w-4" />
-                <span>Delete Receipt</span>
-              </Button>
-            </div>
           </div>
         </div>
       </DialogContent>
