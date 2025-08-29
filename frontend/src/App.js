@@ -405,7 +405,7 @@ const LuminaApp = () => {
                       </div>
                     ))}
                   </div>
-                ) : filteredReceipts.length === 0 ? (
+                ) : receipts.length === 0 ? (
                   <EmptyState onUpload={handleReceiptUpload} uploading={uploadingReceipt} />
                 ) : (
                   <div className="space-y-4">
