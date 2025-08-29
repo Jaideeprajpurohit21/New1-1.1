@@ -481,7 +481,15 @@ class ReceiptOCRProcessor:
             from robust_amount_extractor import extract_amount
             from robust_date_extractor import extract_date
             
-            parsed_data['total_amount'] = extract_amount(full_text)
+            amount = extract_amount(full_text)
+            formatted_amount = None
+            if amount is not None:
+                if isinstance(amount, (int, float)):
+                    formatted_amount = f"${amount:.2f}"
+                else:
+                    formatted_amount = str(amount)
+            
+            parsed_data['total_amount'] = formatted_amount
             parsed_data['receipt_date'] = extract_date(full_text)
             
             # Simple merchant extraction (first non-numeric line)
