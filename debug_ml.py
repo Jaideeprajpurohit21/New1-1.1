@@ -3,6 +3,9 @@
 Debug ML Predictor
 """
 
+import logging
+logging.basicConfig(level=logging.INFO)
+
 from ml_category_predictor import MLCategoryPredictor
 import traceback
 
