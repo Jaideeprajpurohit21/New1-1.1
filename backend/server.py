@@ -246,7 +246,7 @@ class ReceiptOCRProcessor:
             }
     
     def parse_receipt_text(self, full_text: str, ocr_results: List) -> Dict[str, Any]:
-        """Parse OCR results into structured receipt data with enhanced search text"""
+        """Parse OCR results into structured receipt data with enhanced search text and improved amount detection"""
         try:
             # Sort results by vertical position for better parsing
             sorted_results = sorted(ocr_results, key=lambda x: x[0][0][1])  # Sort by top-left y coordinate
@@ -279,20 +279,38 @@ class ReceiptOCRProcessor:
                 r'\d{1,2}\.\d{1,2}\.\d{2,4}'
             ]
             
-            amount_pattern = r'\$?\d+\.?\d{0,2}'
-            total_keywords = ['total', 'amount', 'sum', 'balance', 'due']
+            # Enhanced amount patterns to capture various receipt formats
+            amount_patterns = [
+                # Standard formats: $12.34, 12.34, $12, 12
+                r'\$\s*\d+(?:\.\d{2})?',           # $12.34, $ 12.34, $12
+                r'\d+\.\d{2}',                      # 12.34
+                r'\d+\s*\.\s*\d{2}',               # 12 . 34 (with spaces)
+                # Total formats: TOTAL: $12.34, Total $12.34, etc.
+                r'(?:TOTAL|total|Total)\s*:?\s*\$?\s*\d+(?:\.\d{2})?',  # TOTAL: $12.34
+                r'(?:AMOUNT|amount|Amount)\s*:?\s*\$?\s*\d+(?:\.\d{2})?', # AMOUNT: $12.34
+                r'(?:DUE|due|Due)\s*:?\s*\$?\s*\d+(?:\.\d{2})?',       # DUE: $12.34
+                r'(?:BALANCE|balance|Balance)\s*:?\s*\$?\s*\d+(?:\.\d{2})?', # BALANCE: $12.34
+                # Cash amounts
+                r'(?:CASH|cash|Cash)\s*:?\s*\$?\s*\d+(?:\.\d{2})?',    # CASH: $12.34
+                # Change amounts  
+                r'(?:CHANGE|change|Change)\s*:?\s*\$?\s*\d+(?:\.\d{2})?', # CHANGE: $12.34
+            ]
+            
+            # Keywords that typically precede or contain total amounts
+            total_keywords = ['total', 'amount', 'sum', 'balance', 'due', 'cash', 'change', 'grand', 'subtotal']
             
             confidences = []
             
             for i, line in enumerate(lines):
                 text = line['text'].lower()
+                original_text = line['text']
                 confidence = line['confidence']
                 confidences.append(confidence)
                 
                 # Try to identify merchant (usually first substantial line without numbers)
-                if not parsed_data['merchant_name'] and len(line['text']) > 3:
+                if not parsed_data['merchant_name'] and len(original_text) > 3:
                     if not re.search(r'\d', text) and not any(keyword in text for keyword in total_keywords):
-                        parsed_data['merchant_name'] = line['text'].strip()
+                        parsed_data['merchant_name'] = original_text.strip()
                 
                 # Look for dates
                 if not parsed_data['receipt_date']:
@@ -302,23 +320,50 @@ class ReceiptOCRProcessor:
                             parsed_data['receipt_date'] = date_match.group()
                             break
                 
-                # Look for total amount
+                # Enhanced total amount detection
                 if not parsed_data['total_amount']:
+                    # First check if line contains total keywords
                     if any(keyword in text for keyword in total_keywords):
-                        amount_match = re.search(amount_pattern, line['text'])
-                        if amount_match:
-                            parsed_data['total_amount'] = amount_match.group()
+                        # Try each amount pattern
+                        for pattern in amount_patterns:
+                            amount_match = re.search(pattern, original_text, re.IGNORECASE)
+                            if amount_match:
+                                amount_text = amount_match.group()
+                                # Clean and extract just the numeric amount
+                                cleaned_amount = self._clean_amount_text(amount_text)
+                                if cleaned_amount:
+                                    parsed_data['total_amount'] = cleaned_amount
+                                    logger.info(f"Found total amount: {cleaned_amount} from text: {original_text}")
+                                    break
+                    
+                    # If still no total found, try to find any dollar amount in lines with total keywords
+                    if not parsed_data['total_amount']:
+                        for pattern in amount_patterns[:4]:  # Use basic patterns only
+                            amount_match = re.search(pattern, original_text, re.IGNORECASE)
+                            if amount_match and any(keyword in text for keyword in total_keywords):
+                                amount_text = amount_match.group()
+                                cleaned_amount = self._clean_amount_text(amount_text)
+                                if cleaned_amount:
+                                    parsed_data['total_amount'] = cleaned_amount
+                                    break
                 
-                # Look for line items (text with amounts, excluding totals)
-                amount_match = re.search(amount_pattern, line['text'])
-                if amount_match and not any(keyword in text for keyword in ['total', 'subtotal', 'tax', 'change']):
-                    item_text = line['text'].replace(amount_match.group(), '').strip()
-                    if item_text and len(item_text) > 2:
-                        parsed_data['items'].append({
-                            'description': item_text,
-                            'amount': amount_match.group(),
-                            'confidence': confidence
-                        })
+                # Look for line items (text with amounts, excluding totals and taxes)
+                exclude_keywords = ['total', 'subtotal', 'tax', 'change', 'balance', 'due', 'cash', 'tip']
+                if not any(keyword in text for keyword in exclude_keywords):
+                    for pattern in amount_patterns[:4]:  # Use basic amount patterns for line items
+                        amount_match = re.search(pattern, original_text, re.IGNORECASE)
+                        if amount_match:
+                            amount_text = amount_match.group()
+                            cleaned_amount = self._clean_amount_text(amount_text)
+                            item_text = original_text.replace(amount_match.group(), '').strip()
+                            
+                            if cleaned_amount and item_text and len(item_text) > 2:
+                                parsed_data['items'].append({
+                                    'description': item_text,
+                                    'amount': cleaned_amount,
+                                    'confidence': confidence
+                                })
+                            break
             
             # Calculate average confidence
             if confidences:
@@ -336,6 +381,31 @@ class ReceiptOCRProcessor:
                 'confidence_score': 0.0,
                 'searchable_text': full_text
             }
+    
+    def _clean_amount_text(self, amount_text: str) -> str:
+        """Clean and standardize amount text to proper format"""
+        try:
+            # Remove extra spaces and convert to lowercase for processing
+            cleaned = amount_text.strip()
+            
+            # Extract numeric part with decimal
+            # First, try to find number with decimal
+            decimal_match = re.search(r'\d+\.\d{2}', cleaned)
+            if decimal_match:
+                number = decimal_match.group()
+                return f"${number}"
+            
+            # Try to find whole number
+            whole_match = re.search(r'\d+', cleaned)
+            if whole_match:
+                number = whole_match.group()
+                return f"${number}.00"
+            
+            return None
+            
+        except Exception as e:
+            logger.warning(f"Error cleaning amount text '{amount_text}': {str(e)}")
+            return None
 
 # Initialize OCR processor
 ocr_processor = ReceiptOCRProcessor()
