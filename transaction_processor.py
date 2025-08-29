@@ -183,7 +183,37 @@ class TransactionProcessor:
     
     def predict_category(self, text: str, amount: Optional[float], merchant: Optional[str], 
                         date_str: Optional[str]) -> tuple[str, float]:
-        """Predict transaction category using rule-based system"""
+        """Predict transaction category using ML model or rule-based system"""
+        
+        # Try ML prediction first if available
+        if self.use_ml and self.ml_predictor:
+            try:
+                ml_result = self.ml_predictor.predict_category(
+                    raw_text=text,
+                    amount=amount,
+                    merchant=merchant,
+                    date_str=date_str
+                )
+                
+                # If ML prediction successful and confident
+                if (ml_result.get('method') == 'ml_random_forest' and 
+                    ml_result.get('confidence', 0) >= 0.3):
+                    
+                    category = ml_result.get('category', 'Uncategorized')
+                    confidence = ml_result.get('confidence', 0.0)
+                    
+                    logger.info(f"ML prediction: {category} (confidence: {confidence:.3f})")
+                    return category, confidence
+                    
+            except Exception as e:
+                logger.error(f"Error in ML prediction: {str(e)}")
+        
+        # Fallback to rule-based prediction
+        return self._rule_based_prediction(text, amount, merchant, date_str)
+    
+    def _rule_based_prediction(self, text: str, amount: Optional[float], 
+                             merchant: Optional[str], date_str: Optional[str]) -> tuple[str, float]:
+        """Rule-based category prediction as fallback"""
         text_lower = text.lower()
         merchant_lower = (merchant or '').lower()
         
@@ -233,6 +263,7 @@ class TransactionProcessor:
             
             # Apply minimum confidence threshold
             if confidence >= 0.3:
+                logger.info(f"Rule-based prediction: {best_category} (confidence: {confidence:.3f})")
                 return best_category.title(), confidence
         
         # Default fallback
