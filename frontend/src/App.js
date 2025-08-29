@@ -83,11 +83,21 @@ const LuminaApp = () => {
   });
   const [showExportDialog, setShowExportDialog] = useState(false);
 
-  // Fetch receipts from API
-  const fetchReceipts = useCallback(async () => {
+  // Fetch receipts from API with enhanced search
+  const fetchReceipts = useCallback(async (search = '', category = '') => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API}/receipts`);
+      let url = `${API}/receipts`;
+      const params = new URLSearchParams();
+      
+      if (search) params.append('search', search);
+      if (category && category !== 'All') params.append('category', category);
+      
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+      
+      const response = await axios.get(url);
       setReceipts(response.data);
     } catch (error) {
       console.error('Error fetching receipts:', error);
