@@ -1979,12 +1979,12 @@ TOTAL $9.45"""
             return len(categories_found) > 0
 
 def main():
-    print("🚀 Starting Lumina Receipt OCR API Tests - Enhanced OCR Performance Testing")
+    print("🚀 Starting Lumina Receipt OCR API Tests - Master Transaction Processor Integration Testing")
     print("=" * 80)
     
     tester = LuminaAPITester()
     
-    # Test sequence for enhanced Lumina v2.0.0 features with focus on OCR enhancements
+    # Test sequence for enhanced Lumina v2.0.0 features with focus on Master Transaction Processor
     test_sequence = [
         ("API Root", tester.test_api_root),
         ("Get Categories (Empty)", tester.test_get_categories_empty),
@@ -1994,7 +1994,18 @@ def main():
         ("Upload Receipt (Auto-Detect)", tester.test_upload_receipt),
         ("Upload PDF Receipt", tester.test_upload_pdf_receipt),
         
-        # === NEW OCR ENHANCEMENT TESTS ===
+        # === MASTER TRANSACTION PROCESSOR INTEGRATION TESTS ===
+        ("🔥 Transaction Processor - Dining Category", tester.test_transaction_processor_dining_category),
+        ("🔥 Transaction Processor - Groceries Category", tester.test_transaction_processor_groceries_category),
+        ("🔥 Transaction Processor - Transportation Category", tester.test_transaction_processor_transportation_category),
+        ("🔥 Transaction Processor - Subscriptions Category", tester.test_transaction_processor_subscriptions_category),
+        ("🔥 Transaction Processor - Healthcare Category", tester.test_transaction_processor_healthcare_category),
+        ("🔥 Transaction Processor - Confidence Scoring", tester.test_transaction_processor_confidence_scoring),
+        ("🔥 Transaction Processor - Advanced Data Extraction", tester.test_transaction_processor_advanced_extraction),
+        ("🔥 Transaction Processor - Fallback Mechanism", tester.test_transaction_processor_fallback_mechanism),
+        ("🔥 Transaction Processor - 9+ Categories Support", tester.test_transaction_processor_nine_plus_categories),
+        
+        # === EXISTING OCR ENHANCEMENT TESTS ===
         ("🔥 GPU Acceleration & CPU Fallback", tester.test_gpu_acceleration_fallback),
         ("🔥 Enhanced Amount Detection - Standard ($XX.XX)", tester.test_enhanced_amount_detection_standard),
         ("🔥 Enhanced Amount Detection - TOTAL: Format", tester.test_enhanced_amount_detection_total_colon),
