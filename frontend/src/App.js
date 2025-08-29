@@ -641,16 +641,19 @@ const ReceiptCard = ({ receipt, onCategoryUpdate, onDelete, onViewOriginal, cate
   );
 };
 
-// Upload Receipt Dialog Component
+// Enhanced Upload Receipt Dialog with PDF support
 const UploadReceiptDialog = ({ onUpload, uploading }) => {
   const [open, setOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [category, setCategory] = useState('Uncategorized');
+  const [category, setCategory] = useState('Auto-Detect');
   const [dragActive, setDragActive] = useState(false);
 
   const handleFileSelect = (file) => {
-    if (file && file.type.startsWith('image/')) {
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/tiff', 'image/bmp', 'application/pdf'];
+    if (file && allowedTypes.includes(file.type)) {
       setSelectedFile(file);
+    } else {
+      alert('Please select a valid image file (JPG, PNG, TIFF, BMP) or PDF file.');
     }
   };
 
@@ -659,7 +662,7 @@ const UploadReceiptDialog = ({ onUpload, uploading }) => {
       await onUpload(selectedFile, category);
       setOpen(false);
       setSelectedFile(null);
-      setCategory('Uncategorized');
+      setCategory('Auto-Detect');
     }
   };
 
@@ -683,6 +686,15 @@ const UploadReceiptDialog = ({ onUpload, uploading }) => {
     }
   };
 
+  const getFileIcon = () => {
+    if (!selectedFile) return <Upload className="mx-auto h-8 w-8 text-slate-400" />;
+    
+    if (selectedFile.type === 'application/pdf') {
+      return <FilePdf className="mx-auto h-8 w-8 text-red-500" />;
+    }
+    return <FileImage className="mx-auto h-8 w-8 text-blue-500" />;
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -695,7 +707,7 @@ const UploadReceiptDialog = ({ onUpload, uploading }) => {
         <DialogHeader>
           <DialogTitle>Upload Receipt</DialogTitle>
           <DialogDescription>
-            Upload an image of your receipt to extract expense data automatically.
+            Upload an image or PDF of your receipt for automatic OCR processing and AI categorization.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
@@ -714,8 +726,11 @@ const UploadReceiptDialog = ({ onUpload, uploading }) => {
           >
             {selectedFile ? (
               <div className="space-y-2">
-                <CheckCircle className="mx-auto h-8 w-8 text-green-600" />
+                {getFileIcon()}
                 <p className="text-sm font-medium">{selectedFile.name}</p>
+                <p className="text-xs text-slate-500">
+                  {selectedFile.type === 'application/pdf' ? 'PDF Document' : 'Image File'} • {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                </p>
                 <Button
                   variant="outline"
                   size="sm"
@@ -726,7 +741,7 @@ const UploadReceiptDialog = ({ onUpload, uploading }) => {
               </div>
             ) : (
               <div className="space-y-2">
-                <Upload className="mx-auto h-8 w-8 text-slate-400" />
+                {getFileIcon()}
                 <div>
                   <Label htmlFor="file-upload" className="cursor-pointer">
                     <span className="text-blue-600 font-medium">Click to upload</span>
@@ -736,11 +751,11 @@ const UploadReceiptDialog = ({ onUpload, uploading }) => {
                     id="file-upload"
                     type="file"
                     className="hidden"
-                    accept="image/*"
+                    accept="image/*,.pdf"
                     onChange={(e) => handleFileSelect(e.target.files[0])}
                   />
                 </div>
-                <p className="text-xs text-slate-500">PNG, JPG up to 10MB</p>
+                <p className="text-xs text-slate-500">Supports JPG, PNG, and PDF files up to 10MB</p>
               </div>
             )}
           </div>
@@ -752,17 +767,30 @@ const UploadReceiptDialog = ({ onUpload, uploading }) => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Uncategorized">Uncategorized</SelectItem>
-                <SelectItem value="Travel">Travel</SelectItem>
-                <SelectItem value="Meals">Meals</SelectItem>
-                <SelectItem value="Office Supplies">Office Supplies</SelectItem>
-                <SelectItem value="Entertainment">Entertainment</SelectItem>
-                <SelectItem value="Transportation">Transportation</SelectItem>
-                <SelectItem value="Utilities">Utilities</SelectItem>
-                <SelectItem value="Healthcare">Healthcare</SelectItem>
-                <SelectItem value="Other">Other</SelectItem>
+                <SelectItem value="Auto-Detect">
+                  <div className="flex items-center space-x-2">
+                    <Bot className="w-4 h-4 text-purple-500" />
+                    <span>Auto-Detect (AI Powered)</span>
+                  </div>
+                </SelectItem>
+                <Separator />
+                <SelectItem value="Meals & Entertainment">🍽️ Meals & Entertainment</SelectItem>
+                <SelectItem value="Groceries">🛒 Groceries</SelectItem>
+                <SelectItem value="Transportation & Fuel">🚗 Transportation & Fuel</SelectItem>
+                <SelectItem value="Office Supplies">📎 Office Supplies</SelectItem>
+                <SelectItem value="Shopping">🛍️ Shopping</SelectItem>
+                <SelectItem value="Utilities">⚡ Utilities</SelectItem>
+                <SelectItem value="Healthcare">🏥 Healthcare</SelectItem>
+                <SelectItem value="Travel">✈️ Travel</SelectItem>
+                <SelectItem value="Uncategorized">📂 Uncategorized</SelectItem>
               </SelectContent>
             </Select>
+            {category === 'Auto-Detect' && (
+              <p className="text-xs text-purple-600 flex items-center space-x-1">
+                <Sparkles className="w-3 h-3" />
+                <span>AI will analyze the merchant and content to suggest the best category</span>
+              </p>
+            )}
           </div>
 
           <div className="flex justify-end space-x-2">
@@ -771,6 +799,137 @@ const UploadReceiptDialog = ({ onUpload, uploading }) => {
             </Button>
             <Button onClick={handleUpload} disabled={!selectedFile || uploading}>
               {uploading ? 'Processing...' : 'Upload & Process'}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+// Enhanced Export Dialog with Tax Preparation Features
+const ExportDialog = ({ onExport, disabled, categories, open, onOpenChange }) => {
+  const [filters, setFilters] = useState({
+    startDate: null,
+    endDate: null,
+    categories: []
+  });
+
+  const handleExport = () => {
+    const exportFilters = {
+      start_date: filters.startDate?.toISOString().split('T')[0],
+      end_date: filters.endDate?.toISOString().split('T')[0],
+      categories: filters.categories.length > 0 ? filters.categories : null
+    };
+    
+    onExport(exportFilters);
+  };
+
+  const toggleCategory = (categoryName) => {
+    setFilters(prev => ({
+      ...prev,
+      categories: prev.categories.includes(categoryName)
+        ? prev.categories.filter(c => c !== categoryName)
+        : [...prev.categories, categoryName]
+    }));
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={disabled}
+        >
+          <Download className="w-4 h-4 mr-2" />
+          Tax Export
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Export Tax-Ready CSV</DialogTitle>
+          <DialogDescription>
+            Generate a comprehensive CSV report with category summaries for tax preparation and accounting.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="space-y-4">
+          {/* Date Range Selection */}
+          <div className="space-y-2">
+            <Label>Date Range (Optional)</Label>
+            <div className="flex space-x-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <CalendarIcon className="w-4 h-4 mr-2" />
+                    {filters.startDate ? filters.startDate.toLocaleDateString() : 'Start Date'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={filters.startDate}
+                    onSelect={(date) => setFilters(prev => ({ ...prev, startDate: date }))}
+                  />
+                </PopoverContent>
+              </Popover>
+              
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <CalendarIcon className="w-4 h-4 mr-2" />
+                    {filters.endDate ? filters.endDate.toLocaleDateString() : 'End Date'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={filters.endDate}
+                    onSelect={(date) => setFilters(prev => ({ ...prev, endDate: date }))}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+
+          {/* Category Selection */}
+          <div className="space-y-2">
+            <Label>Categories (Optional - All if none selected)</Label>
+            <div className="max-h-32 overflow-y-auto space-y-1">
+              {categories.map((category) => (
+                <div key={category.name} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={category.name}
+                    checked={filters.categories.includes(category.name)}
+                    onCheckedChange={() => toggleCategory(category.name)}
+                  />
+                  <Label htmlFor={category.name} className="text-sm cursor-pointer">
+                    {category.name} ({category.count} receipts - ${category.total_amount?.toFixed(2) || '0.00'})
+                  </Label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Export Info */}
+          <div className="bg-blue-50 p-3 rounded-lg">
+            <h4 className="text-sm font-medium text-blue-900">Tax-Ready Features:</h4>
+            <ul className="text-xs text-blue-800 mt-1 space-y-1">
+              <li>• Category summary with totals</li>
+              <li>• Detailed transaction records</li>
+              <li>• Confidence scores for audit trails</li>
+              <li>• Professional formatting for accountants</li>
+            </ul>
+          </div>
+
+          <div className="flex justify-end space-x-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleExport}>
+              <Download className="w-4 h-4 mr-2" />
+              Export CSV
             </Button>
           </div>
         </div>
