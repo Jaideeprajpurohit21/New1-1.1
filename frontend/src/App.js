@@ -394,7 +394,7 @@ const LuminaApp = () => {
             {/* Receipts List */}
             <Card>
               <CardHeader>
-                <CardTitle>All Receipts ({filteredReceipts.length})</CardTitle>
+                <CardTitle>All Receipts ({receipts.length})</CardTitle>
               </CardHeader>
               <CardContent>
                 {loading ? (
