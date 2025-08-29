@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 LUMINA - AI-POWERED RECEIPT MANAGEMENT SYSTEM
-Master Transaction Processor
+Master Transaction Processor with ML Category Prediction
 
 Copyright (c) 2024 Jaideep Singh Rajpurohit. All rights reserved.
 PROPRIETARY SOFTWARE - UNAUTHORIZED USE PROHIBITED
@@ -17,6 +17,14 @@ import logging
 # Import our robust extractors
 from robust_amount_extractor import extract_amount
 from robust_date_extractor import extract_date
+
+# Import ML category predictor
+try:
+    from ml_category_predictor import MLCategoryPredictor
+    ML_AVAILABLE = True
+except ImportError:
+    ML_AVAILABLE = False
+    logging.warning("ML predictor not available, using rule-based system")
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
