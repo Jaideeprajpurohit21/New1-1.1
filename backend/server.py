@@ -588,6 +588,168 @@ class ReceiptOCRProcessor:
                 return f"{currency}{amount:.2f}"
         
         return None
+    
+    def _extract_transaction_date_robust(self, text: str) -> Optional[str]:
+        """
+        Robust function to extract transaction dates from text while avoiding 
+        false matches with amounts, IDs, and other numbers.
+        
+        Returns the date in YYYY-MM-DD format.
+        """
+        import re
+        from datetime import datetime, date
+        from typing import Optional, List, Tuple
+        import calendar
+        
+        if not text or not isinstance(text, str):
+            return None
+        
+        # Current date for validation
+        today = date.today()
+        current_year = today.year
+        
+        # Month name mappings
+        month_names = {
+            'january': 1, 'jan': 1, 'february': 2, 'feb': 2, 'march': 3, 'mar': 3,
+            'april': 4, 'apr': 4, 'may': 5, 'june': 6, 'jun': 6, 'july': 7, 'jul': 7,
+            'august': 8, 'aug': 8, 'september': 9, 'sep': 9, 'sept': 9,
+            'october': 10, 'oct': 10, 'november': 11, 'nov': 11, 'december': 12, 'dec': 12
+        }
+        
+        # Date context keywords
+        date_keywords = [
+            'on', 'date', 'dated', 'transaction', 'charged', 'billed', 'purchased',
+            'payment', 'transfer', 'withdrawal', 'deposit', 'processed', 'completed'
+        ]
+        
+        # Keywords to avoid
+        avoid_keywords = [
+            'amount', 'balance', 'total', 'price', 'cost', 'fee', 'limit', 
+            'account', 'card', 'number', 'id', 'phone', 'mobile', 'contact'
+        ]
+        
+        def validate_date(year: int, month: int, day: int) -> bool:
+            """Validate if the date is reasonable for a transaction"""
+            try:
+                test_date = date(year, month, day)
+                if test_date > today:
+                    return False
+                if year < current_year - 7:
+                    return False
+                if year < 2000:
+                    return False
+                return True
+            except ValueError:
+                return False
+        
+        def parse_single_date(date_str: str) -> Optional[str]:
+            """Parse a single date string"""
+            date_str = date_str.strip()
+            
+            # YYYY-MM-DD or YYYY/MM/DD
+            match = re.search(r'(\d{4})[-/](\d{1,2})[-/](\d{1,2})', date_str)
+            if match:
+                year, month, day = int(match.group(1)), int(match.group(2)), int(match.group(3))
+                if validate_date(year, month, day):
+                    return f"{year:04d}-{month:02d}-{day:02d}"
+            
+            # DD-MM-YYYY or DD/MM/YYYY
+            match = re.search(r'(\d{1,2})[-/](\d{1,2})[-/](\d{4})', date_str)
+            if match:
+                day, month, year = int(match.group(1)), int(match.group(2)), int(match.group(3))
+                if validate_date(year, month, day):
+                    return f"{year:04d}-{month:02d}-{day:02d}"
+            
+            # MM/DD/YY or DD/MM/YY patterns
+            match = re.search(r'(\d{1,2})[-/](\d{1,2})[-/](\d{2})', date_str)
+            if match:
+                first, second, year_short = int(match.group(1)), int(match.group(2)), int(match.group(3))
+                year = 2000 + year_short if year_short <= 30 else 1900 + year_short
+                
+                # Try MM/DD/YY first
+                if first <= 12 and second <= 31 and validate_date(year, first, second):
+                    return f"{year:04d}-{first:02d}-{second:02d}"
+                # Fallback to DD/MM/YY
+                elif second <= 12 and first <= 31 and validate_date(year, second, first):
+                    return f"{year:04d}-{second:02d}-{first:02d}"
+            
+            # Textual dates
+            for month_name, month_num in month_names.items():
+                # "Oct 5" or "October 5" (without year)
+                pattern = rf'\b{re.escape(month_name)}\s+(\d{{1,2}})\b(?!\s*,?\s*\d{{4}})'
+                match = re.search(pattern, date_str, re.IGNORECASE)
+                if match:
+                    day = int(match.group(1))
+                    year = current_year
+                    test_date = date(year, month_num, day)
+                    if test_date > today:
+                        year = current_year - 1
+                    if validate_date(year, month_num, day):
+                        return f"{year:04d}-{month_num:02d}-{day:02d}"
+                
+                # "Oct 5, 2024" or "October 5, 2024"
+                pattern = rf'\b{re.escape(month_name)}\s+(\d{{1,2}}),?\s+(\d{{4}})\b'
+                match = re.search(pattern, date_str, re.IGNORECASE)
+                if match:
+                    day, year = int(match.group(1)), int(match.group(2))
+                    if validate_date(year, month_num, day):
+                        return f"{year:04d}-{month_num:02d}-{day:02d}"
+                
+                # "5th Oct 2024" or "12th Mar 2024"
+                pattern = rf'\b(\d{{1,2}})(?:st|nd|rd|th)?\s+{re.escape(month_name)}\s+(\d{{4}})\b'
+                match = re.search(pattern, date_str, re.IGNORECASE)
+                if match:
+                    day, year = int(match.group(1)), int(match.group(2))
+                    if validate_date(year, month_num, day):
+                        return f"{year:04d}-{month_num:02d}-{day:02d}"
+            
+            return None
+        
+        # Find date candidates
+        candidates = []
+        text_lower = text.lower()
+        
+        # High priority: Dates near date keywords
+        for keyword in date_keywords:
+            for match in re.finditer(re.escape(keyword), text_lower):
+                start_pos = max(0, match.start() - 30)
+                end_pos = min(len(text), match.end() + 30)
+                context_window = text[start_pos:end_pos]
+                
+                date_patterns = [
+                    r'\d{4}[-/]\d{1,2}[-/]\d{1,2}',
+                    r'\d{1,2}[-/]\d{1,2}[-/]\d{4}',
+                    r'\d{1,2}[-/]\d{1,2}[-/]\d{2}',
+                    r'\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2}(?:,?\s+\d{4})?\b',
+                    r'\b\d{1,2}(?:st|nd|rd|th)?\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4}\b'
+                ]
+                
+                for pattern in date_patterns:
+                    for date_match in re.finditer(pattern, context_window, re.IGNORECASE):
+                        date_str = date_match.group()
+                        distance = abs(date_match.start() - (match.start() - start_pos))
+                        candidates.append((date_str, distance, start_pos + date_match.start()))
+        
+        # Medium priority: ISO-like formats
+        iso_patterns = [r'\b\d{4}-\d{1,2}-\d{1,2}\b', r'\b\d{4}/\d{1,2}/\d{1,2}\b']
+        for pattern in iso_patterns:
+            for match in re.finditer(pattern, text):
+                context_start = max(0, match.start() - 20)
+                context_end = min(len(text), match.end() + 20)
+                context = text[context_start:context_end].lower()
+                
+                if not any(avoid_word in context for avoid_word in avoid_keywords):
+                    candidates.append((match.group(), 1000, match.start()))
+        
+        # Parse candidates and return best match
+        if candidates:
+            candidates.sort(key=lambda x: (x[1], x[2]))  # Sort by priority, then position
+            for date_str, _, _ in candidates:
+                parsed_date = parse_single_date(date_str)
+                if parsed_date:
+                    return parsed_date
+        
+        return None
 
 # Initialize OCR processor
 ocr_processor = ReceiptOCRProcessor()
