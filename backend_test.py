@@ -494,17 +494,37 @@ def main():
     
     tester = LuminaAPITester()
     
-    # Test sequence
+    # Test sequence for enhanced Lumina v2.0.0 features
     test_sequence = [
         ("API Root", tester.test_api_root),
         ("Get Categories (Empty)", tester.test_get_categories_empty),
         ("Get Receipts (Empty)", tester.test_get_receipts_empty),
-        ("Upload Receipt", tester.test_upload_receipt),
+        
+        # Test image upload with auto-categorization
+        ("Upload Receipt (Auto-Detect)", tester.test_upload_receipt),
+        
+        # Test PDF support
+        ("Upload PDF Receipt", tester.test_upload_pdf_receipt),
+        
+        # Test receipt retrieval and file viewing
         ("Get Receipt by ID", tester.test_get_receipt_by_id),
+        ("View Original Receipt File", tester.test_view_original_receipt),
+        
+        # Test category management
         ("Update Receipt Category", tester.test_update_receipt_category),
-        ("Get Receipts (With Data)", tester.test_get_receipts_with_data),
         ("Get Categories (With Data)", tester.test_get_categories_with_data),
-        ("Export CSV", tester.test_export_csv),
+        
+        # Test enhanced search and filtering
+        ("Search Receipts", tester.test_search_receipts),
+        ("Category Filtering", tester.test_category_filtering),
+        ("Search Suggestions", tester.test_search_suggestions),
+        ("Get Receipts (With Data)", tester.test_get_receipts_with_data),
+        
+        # Test enhanced CSV export
+        ("Export CSV (Basic)", tester.test_export_csv_basic),
+        ("Export CSV (Filtered)", tester.test_export_csv_filtered),
+        
+        # Cleanup tests
         ("Delete Receipt", tester.test_delete_receipt),
         ("Get Non-existent Receipt", tester.test_get_nonexistent_receipt),
     ]
