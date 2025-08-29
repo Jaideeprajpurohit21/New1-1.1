@@ -437,75 +437,150 @@ class ReceiptOCRProcessor:
                 'searchable_text': full_text
             }
     
-    def _clean_amount_text(self, amount_text: str) -> str:
-        """Clean and standardize amount text to proper format with international currency support"""
-        try:
-            # Remove extra spaces and prepare for processing
-            cleaned = amount_text.strip()
+    def _extract_transaction_amount_robust(self, text: str) -> Optional[str]:
+        """
+        Robust function to extract transaction amounts from text while ignoring 
+        account balances, transaction IDs, and other irrelevant numbers.
+        
+        Returns the amount in standardized currency format (e.g., "$485.00", "₹1500.00")
+        """
+        import re
+        from typing import Optional, List, Tuple
+        
+        if not text or not isinstance(text, str):
+            return None
+        
+        # Currency mappings for standardization
+        currency_codes = ['INR', 'USD', 'EUR', 'GBP', 'CAD', 'AUD', 'SGD', 'JPY']
+        currency_symbols = ['₹', '$', '€', '£', '¥', '¢']
+        currency_map = {
+            'INR': '₹', 'USD': '$', 'EUR': '€', 'GBP': '£', 
+            'CAD': '$', 'AUD': '$', 'SGD': '$', 'JPY': '¥'
+        }
+        
+        # Transaction keywords (ordered by priority)
+        transaction_keywords = [
+            'purchase', 'spent', 'charged', 'debited', 'payment of', 'payment',
+            'subscription of', 'subscription', 'monthly', 'billed', 'transaction',
+            'withdrew', 'withdrawal', 'transfer', 'paid', 'cost', 'amount due', 'due', 'total'
+        ]
+        
+        # Balance keywords to avoid
+        balance_keywords = [
+            'avl bal', 'available balance', 'balance', 'bal', 'remaining', 
+            'limit', 'credit limit', 'ending in'
+        ]
+        
+        def extract_numeric_amount(amount_str: str) -> Optional[float]:
+            """Extract numeric value from amount string"""
+            try:
+                cleaned = amount_str
+                for symbol in currency_symbols:
+                    cleaned = cleaned.replace(symbol, '')
+                for code in currency_codes:
+                    cleaned = re.sub(r'\b' + code + r'\b', '', cleaned, flags=re.IGNORECASE)
+                
+                cleaned = cleaned.strip()
+                
+                # Handle comma-separated numbers
+                number_match = re.search(r'\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?', cleaned)
+                if number_match:
+                    number_str = number_match.group().replace(',', '')
+                    return float(number_str)
+                
+                # Handle simple decimal numbers
+                decimal_match = re.search(r'\d+\.\d{1,2}', cleaned)
+                if decimal_match:
+                    return float(decimal_match.group())
+                
+                # Handle whole numbers
+                whole_match = re.search(r'\d+', cleaned)
+                if whole_match:
+                    return float(whole_match.group())
+                    
+            except (ValueError, AttributeError):
+                pass
             
-            # Currency mapping for standardization
-            currency_map = {
-                'INR': '₹',
-                'USD': '$',
-                'EUR': '€',
-                'GBP': '£',
-                'CAD': '$',
-                'AUD': '$'
-            }
-            
-            # Extract currency symbol or code
-            currency_symbol = '$'  # default
-            
-            # Check for currency codes (INR, USD, etc.)
+            return None
+        
+        def detect_currency(amount_str: str) -> str:
+            """Detect currency from amount string"""
             for code, symbol in currency_map.items():
-                if code in cleaned.upper():
-                    currency_symbol = symbol
-                    # Remove currency code from text for number extraction
-                    cleaned = re.sub(r'\b' + code + r'\b', '', cleaned, flags=re.IGNORECASE).strip()
-                    break
+                if code in amount_str.upper():
+                    return symbol
             
-            # Check for currency symbols (₹, $, €, etc.)
-            currency_symbols = ['₹', '$', '€', '£', '¥']
             for symbol in currency_symbols:
-                if symbol in cleaned:
-                    currency_symbol = symbol
-                    cleaned = cleaned.replace(symbol, '').strip()
-                    break
+                if symbol in amount_str:
+                    return symbol
             
-            # Extract numeric part with commas and decimals
-            # First, try to find number with commas and decimal: 1,500.00
-            comma_decimal_match = re.search(r'\d{1,3}(?:,\d{3})*\.\d{2}', cleaned)
-            if comma_decimal_match:
-                number_str = comma_decimal_match.group()
-                # Remove commas for processing
-                number = number_str.replace(',', '')
-                return f"{currency_symbol}{number}"
+            return '$'  # Default to USD
+        
+        # Find amounts near transaction keywords
+        text_lower = text.lower()
+        found_amounts = []
+        
+        for priority, keyword in enumerate(transaction_keywords):
+            keyword_positions = [m.start() for m in re.finditer(re.escape(keyword), text_lower)]
             
-            # Try to find number with commas but no decimal: 1,500
-            comma_match = re.search(r'\d{1,3}(?:,\d{3})*', cleaned)
-            if comma_match:
-                number_str = comma_match.group()
-                # Remove commas for processing
-                number = number_str.replace(',', '')
-                return f"{currency_symbol}{number}.00"
+            for pos in keyword_positions:
+                # Look in window around keyword
+                start_pos = max(0, pos - 50)
+                end_pos = min(len(text), pos + len(keyword) + 50)
+                window_text = text[start_pos:end_pos]
+                
+                # Currency patterns
+                patterns = [
+                    r'\b(?:INR|USD|EUR|GBP|CAD|AUD|SGD|JPY)\s+\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?\b',
+                    r'[₹$€£¥¢]\s*\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?',
+                    r'(?:' + re.escape(keyword) + r')\s+(?:of\s+)?\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?',
+                ]
+                
+                for pattern in patterns:
+                    matches = re.finditer(pattern, window_text, re.IGNORECASE)
+                    for match in matches:
+                        amount_val = extract_numeric_amount(match.group())
+                        if amount_val and 0.01 <= amount_val <= 100000:
+                            currency = detect_currency(match.group())
+                            distance = abs(match.start() - (pos - start_pos))
+                            score = priority * 100 + distance
+                            position = start_pos + match.start()
+                            found_amounts.append((amount_val, currency, score, position))
+        
+        # If no keyword-based amounts, look for standalone currency amounts
+        if not found_amounts:
+            patterns = [
+                r'\b(?:INR|USD|EUR|GBP|CAD|AUD|SGD|JPY)\s+\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?\b',
+                r'[₹$€£¥¢]\s*\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?(?!\d)',
+            ]
             
-            # Try to find simple decimal: 12.34
-            decimal_match = re.search(r'\d+\.\d{2}', cleaned)
-            if decimal_match:
-                number = decimal_match.group()
-                return f"{currency_symbol}{number}"
+            for pattern in patterns:
+                matches = re.finditer(pattern, text, re.IGNORECASE)
+                for match in matches:
+                    # Skip if near balance keywords
+                    context_start = max(0, match.start() - 30)
+                    context_end = min(len(text), match.end() + 30)
+                    context = text[context_start:context_end].lower()
+                    
+                    if any(bal_keyword in context for bal_keyword in balance_keywords):
+                        continue
+                    
+                    amount_val = extract_numeric_amount(match.group())
+                    if amount_val and 0.01 <= amount_val <= 100000:
+                        currency = detect_currency(match.group())
+                        found_amounts.append((amount_val, currency, 1000, match.start()))
+        
+        # Return the best amount
+        if found_amounts:
+            found_amounts.sort(key=lambda x: (x[2], x[3]))  # Sort by score, then position
+            amount, currency, _, _ = found_amounts[0]
             
-            # Try to find whole number: 12
-            whole_match = re.search(r'\d+', cleaned)
-            if whole_match:
-                number = whole_match.group()
-                return f"{currency_symbol}{number}.00"
-            
-            return None
-            
-        except Exception as e:
-            logger.warning(f"Error cleaning amount text '{amount_text}': {str(e)}")
-            return None
+            # Format with proper decimal places
+            if amount == int(amount):
+                return f"{currency}{int(amount)}.00"
+            else:
+                return f"{currency}{amount:.2f}"
+        
+        return None
 
 # Initialize OCR processor
 ocr_processor = ReceiptOCRProcessor()
