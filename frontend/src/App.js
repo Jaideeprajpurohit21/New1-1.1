@@ -81,6 +81,10 @@ const LuminaApp = () => {
     categories: []
   });
   const [showExportDialog, setShowExportDialog] = useState(false);
+  
+  // Receipt detail modal state
+  const [selectedReceipt, setSelectedReceipt] = useState(null);
+  const [showReceiptDetail, setShowReceiptDetail] = useState(false);
 
   // Fetch receipts from API with enhanced search
   const fetchReceipts = useCallback(async (search = '', category = '') => {
