@@ -441,11 +441,16 @@ class MLCategoryPredictor:
         train_accuracy = self.rf_model.score(X_train, y_train)
         test_accuracy = self.rf_model.score(X_test, y_test)
         
-        # Cross-validation
-        cv_scores = cross_val_score(self.rf_model, X_train, y_train, cv=5)
+        # Cross-validation (reduce CV folds for small dataset)
+        cv_folds = min(3, len(np.unique(y_train)))  # Use fewer folds for small dataset
+        cv_scores = cross_val_score(self.rf_model, X_train, y_train, cv=cv_folds)
         
         # Predictions for detailed evaluation
         y_pred = self.rf_model.predict(X_test)
+        
+        # Get unique classes in test set
+        unique_classes = np.unique(np.concatenate([y_test, y_pred]))
+        target_names = [self.label_encoder.inverse_transform([i])[0] for i in unique_classes]
         
         # Feature importance
         feature_importance = dict(zip(self.feature_names, self.rf_model.feature_importances_))
@@ -457,7 +462,7 @@ class MLCategoryPredictor:
             'cv_mean_accuracy': cv_scores.mean(),
             'cv_std_accuracy': cv_scores.std(),
             'classification_report': classification_report(
-                y_test, y_pred, target_names=self.label_encoder.classes_, output_dict=True
+                y_test, y_pred, labels=unique_classes, target_names=target_names, output_dict=True, zero_division=0
             ),
             'top_features': top_features,
             'n_samples': len(X),
