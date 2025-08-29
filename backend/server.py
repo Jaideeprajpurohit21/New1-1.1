@@ -441,23 +441,68 @@ class ReceiptOCRProcessor:
             }
     
     def _clean_amount_text(self, amount_text: str) -> str:
-        """Clean and standardize amount text to proper format"""
+        """Clean and standardize amount text to proper format with international currency support"""
         try:
-            # Remove extra spaces and convert to lowercase for processing
+            # Remove extra spaces and prepare for processing
             cleaned = amount_text.strip()
             
-            # Extract numeric part with decimal
-            # First, try to find number with decimal
+            # Currency mapping for standardization
+            currency_map = {
+                'INR': '₹',
+                'USD': '$',
+                'EUR': '€',
+                'GBP': '£',
+                'CAD': '$',
+                'AUD': '$'
+            }
+            
+            # Extract currency symbol or code
+            currency_symbol = '$'  # default
+            
+            # Check for currency codes (INR, USD, etc.)
+            for code, symbol in currency_map.items():
+                if code in cleaned.upper():
+                    currency_symbol = symbol
+                    # Remove currency code from text for number extraction
+                    cleaned = re.sub(r'\b' + code + r'\b', '', cleaned, flags=re.IGNORECASE).strip()
+                    break
+            
+            # Check for currency symbols (₹, $, €, etc.)
+            currency_symbols = ['₹', '$', '€', '£', '¥']
+            for symbol in currency_symbols:
+                if symbol in cleaned:
+                    currency_symbol = symbol
+                    cleaned = cleaned.replace(symbol, '').strip()
+                    break
+            
+            # Extract numeric part with commas and decimals
+            # First, try to find number with commas and decimal: 1,500.00
+            comma_decimal_match = re.search(r'\d{1,3}(?:,\d{3})*\.\d{2}', cleaned)
+            if comma_decimal_match:
+                number_str = comma_decimal_match.group()
+                # Remove commas for processing
+                number = number_str.replace(',', '')
+                return f"{currency_symbol}{number}"
+            
+            # Try to find number with commas but no decimal: 1,500
+            comma_match = re.search(r'\d{1,3}(?:,\d{3})*', cleaned)
+            if comma_match:
+                number_str = comma_match.group()
+                # Remove commas for processing
+                number = number_str.replace(',', '')
+                return f"{currency_symbol}{number}.00"
+            
+            # Try to find simple decimal: 12.34
             decimal_match = re.search(r'\d+\.\d{2}', cleaned)
             if decimal_match:
                 number = decimal_match.group()
-                return f"${number}"
+                return f"{currency_symbol}{number}"
             
-            # Try to find whole number
+            # Try to find whole number: 12
             whole_match = re.search(r'\d+', cleaned)
             if whole_match:
                 number = whole_match.group()
-                return f"${number}.00"
+                return f"{currency_symbol}{number}.00"
             
             return None
             
