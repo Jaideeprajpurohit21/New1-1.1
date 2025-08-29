@@ -45,6 +45,15 @@ import sys
 sys.path.append('..')
 from transaction_processor import TransactionProcessor
 
+# Import ML API router
+try:
+    sys.path.append('..')
+    from ml_trainer_api import ml_router
+    ML_API_AVAILABLE = True
+except ImportError:
+    ML_API_AVAILABLE = False
+    logging.warning("ML API not available")
+
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
