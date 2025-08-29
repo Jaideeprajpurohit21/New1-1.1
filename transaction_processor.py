@@ -34,9 +34,27 @@ class TransactionProcessor:
     """Master transaction processor integrating amount, date, category, and merchant extraction"""
     
     def __init__(self):
-        """Initialize the transaction processor with category prediction model"""
+        """Initialize the transaction processor with ML and rule-based category prediction"""
+        
+        # Initialize ML predictor if available
+        if ML_AVAILABLE:
+            try:
+                self.ml_predictor = MLCategoryPredictor()
+                self.use_ml = self.ml_predictor.is_trained
+                logger.info(f"ML Category Predictor initialized (trained: {self.use_ml})")
+            except Exception as e:
+                logger.error(f"Error initializing ML predictor: {str(e)}")
+                self.ml_predictor = None
+                self.use_ml = False
+        else:
+            self.ml_predictor = None
+            self.use_ml = False
+        
+        # Fallback rule-based system
         self.category_rules = self._load_category_rules()
         self.merchant_patterns = self._load_merchant_patterns()
+        
+        logger.info(f"Transaction processor initialized with ML: {self.use_ml}")
         
     def _load_category_rules(self) -> Dict[str, Any]:
         """Load rule-based category prediction system"""
