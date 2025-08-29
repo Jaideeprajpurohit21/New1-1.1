@@ -416,7 +416,7 @@ class ReceiptOCRProcessor:
                         amount_match = re.search(pattern, original_text, re.IGNORECASE)
                         if amount_match:
                             amount_text = amount_match.group()
-                            cleaned_amount = self._clean_amount_text(amount_text)
+                            cleaned_amount = self._extract_transaction_amount_robust(amount_text)
                             item_text = original_text.replace(amount_match.group(), '').strip()
                             
                             if cleaned_amount and item_text and len(item_text) > 2:
