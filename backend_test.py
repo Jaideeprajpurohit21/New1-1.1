@@ -252,13 +252,163 @@ TOTAL $11.60"""
                 
         return success
 
-    def test_export_csv(self):
-        """Test CSV export functionality"""
+    def create_test_pdf(self):
+        """Create a simple test PDF file"""
+        try:
+            from reportlab.pdfgen import canvas
+            from reportlab.lib.pagesizes import letter
+            
+            # Create a simple PDF receipt
+            pdf_buffer = io.BytesIO()
+            c = canvas.Canvas(pdf_buffer, pagesize=letter)
+            
+            # Add receipt content
+            c.drawString(100, 750, "STARBUCKS COFFEE")
+            c.drawString(100, 730, "123 Coffee Street")
+            c.drawString(100, 710, "Date: 12/15/2024")
+            c.drawString(100, 690, "")
+            c.drawString(100, 670, "Latte Grande        $5.25")
+            c.drawString(100, 650, "Croissant          $3.50")
+            c.drawString(100, 630, "")
+            c.drawString(100, 610, "Subtotal           $8.75")
+            c.drawString(100, 590, "Tax                $0.70")
+            c.drawString(100, 570, "TOTAL              $9.45")
+            
+            c.save()
+            pdf_buffer.seek(0)
+            return pdf_buffer
+            
+        except ImportError:
+            print("   ReportLab not available, creating simple text file as PDF")
+            text_content = """STARBUCKS COFFEE
+123 Coffee Street
+Date: 12/15/2024
+Latte Grande $5.25
+Croissant $3.50
+TOTAL $9.45"""
+            return io.BytesIO(text_content.encode())
+
+    def test_upload_pdf_receipt(self):
+        """Test uploading a PDF receipt"""
+        try:
+            # Create test PDF
+            test_pdf = self.create_test_pdf()
+            
+            files = {
+                'file': ('starbucks_receipt.pdf', test_pdf, 'application/pdf')
+            }
+            data = {
+                'category': 'Auto-Detect'  # Should auto-categorize as Meals & Entertainment
+            }
+            
+            success, response = self.run_test(
+                "Upload PDF Receipt (Auto-Detect)",
+                "POST",
+                "receipts/upload",
+                200,
+                data=data,
+                files=files
+            )
+            
+            if success and response.get('id'):
+                self.pdf_receipt_id = response['id']
+                print(f"   PDF Receipt ID: {self.pdf_receipt_id}")
+                print(f"   Processing Status: {response.get('processing_status')}")
+                print(f"   Merchant: {response.get('merchant_name')}")
+                print(f"   Total: {response.get('total_amount')}")
+                print(f"   Auto-categorized as: {response.get('category')}")
+                print(f"   Original file path: {response.get('original_file_path')}")
+            
+            return success
+            
+        except Exception as e:
+            print(f"❌ Error creating test PDF: {str(e)}")
+            return False
+
+    def test_view_original_receipt(self):
+        """Test viewing original receipt file"""
+        if not self.receipt_id:
+            print("❌ No receipt ID available for testing")
+            return False
+            
         success, response = self.run_test(
-            "Export Receipts CSV",
+            "View Original Receipt File",
             "GET",
+            f"receipts/{self.receipt_id}/file",
+            200,
+            response_type='file'
+        )
+        
+        if success:
+            print(f"   Original file retrieved successfully")
+            print(f"   File size: {len(response)} bytes")
+            
+        return success
+
+    def test_search_receipts(self):
+        """Test enhanced search functionality"""
+        # Test search by merchant name
+        success1, response1 = self.run_test(
+            "Search Receipts by Merchant",
+            "GET",
+            "receipts?search=SUPER",
+            200
+        )
+        
+        if success1:
+            print(f"   Found {len(response1)} receipts matching 'SUPER'")
+        
+        # Test search by amount
+        success2, response2 = self.run_test(
+            "Search Receipts by Amount",
+            "GET",
+            "receipts?search=11.60",
+            200
+        )
+        
+        if success2:
+            print(f"   Found {len(response2)} receipts matching '11.60'")
+        
+        return success1 and success2
+
+    def test_category_filtering(self):
+        """Test category filtering"""
+        success, response = self.run_test(
+            "Filter Receipts by Category",
+            "GET",
+            "receipts?category=Meals & Entertainment",
+            200
+        )
+        
+        if success:
+            print(f"   Found {len(response)} receipts in 'Meals & Entertainment' category")
+            
+        return success
+
+    def test_search_suggestions(self):
+        """Test search suggestions endpoint"""
+        success, response = self.run_test(
+            "Get Search Suggestions",
+            "GET",
+            "search/suggestions?q=SUP",
+            200
+        )
+        
+        if success and response.get('suggestions'):
+            print(f"   Found {len(response['suggestions'])} suggestions for 'SUP'")
+            for suggestion in response['suggestions'][:3]:
+                print(f"     - {suggestion.get('text')} ({suggestion.get('count')} times)")
+                
+        return success
+
+    def test_export_csv_basic(self):
+        """Test basic CSV export functionality"""
+        success, response = self.run_test(
+            "Export Receipts CSV (Basic)",
+            "POST",
             "receipts/export/csv",
             200,
+            data={},
             response_type='csv'
         )
         
@@ -267,9 +417,50 @@ TOTAL $11.60"""
                 csv_content = response.decode('utf-8')
                 lines = csv_content.split('\n')
                 print(f"   CSV has {len(lines)} lines")
-                print(f"   Header: {lines[0] if lines else 'No header'}")
+                print(f"   First line: {lines[0] if lines else 'No content'}")
+                
+                # Check for tax-ready features
+                if 'EXPENSE SUMMARY BY CATEGORY' in csv_content:
+                    print("   ✅ Contains category summary")
+                if 'DETAILED TRANSACTIONS' in csv_content:
+                    print("   ✅ Contains detailed transactions")
+                if 'Confidence Score' in csv_content:
+                    print("   ✅ Contains confidence scores")
+                    
             except:
                 print("   CSV content received but couldn't decode")
+                
+        return success
+
+    def test_export_csv_filtered(self):
+        """Test CSV export with filters"""
+        export_filters = {
+            "start_date": "2024-01-01",
+            "end_date": "2024-12-31",
+            "categories": ["Meals & Entertainment", "Groceries"]
+        }
+        
+        success, response = self.run_test(
+            "Export Receipts CSV (Filtered)",
+            "POST",
+            "receipts/export/csv",
+            200,
+            data=export_filters,
+            response_type='csv'
+        )
+        
+        if success:
+            try:
+                csv_content = response.decode('utf-8')
+                lines = csv_content.split('\n')
+                print(f"   Filtered CSV has {len(lines)} lines")
+                
+                # Check for date range in filename/content
+                if '2024-01-01' in csv_content or '2024-12-31' in csv_content:
+                    print("   ✅ Date range applied")
+                    
+            except:
+                print("   Filtered CSV content received but couldn't decode")
                 
         return success
 
