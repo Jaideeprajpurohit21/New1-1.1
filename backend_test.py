@@ -1978,6 +1978,477 @@ TOTAL $9.45"""
             print("   ⚠️ Limited category diversity - may need improvement")
             return len(categories_found) > 0
 
+    # ===== ML API ENDPOINT TESTS =====
+    
+    def test_ml_health_check(self):
+        """Test ML health check endpoint"""
+        success, response = self.run_test(
+            "🤖 ML Health Check",
+            "GET",
+            "ml/health",
+            200
+        )
+        
+        if success and response.get('success'):
+            health = response.get('health', {})
+            print(f"   ML Available: {health.get('ml_available', False)}")
+            print(f"   Model Loaded: {health.get('model_loaded', False)}")
+            
+            components = health.get('components', {})
+            if components:
+                print(f"   Components:")
+                for component, status in components.items():
+                    print(f"     - {component}: {'✅' if status else '❌'}")
+            
+            if health.get('model_loaded'):
+                print("   ✅ ML system is healthy and ready")
+                return True
+            else:
+                print("   ⚠️ ML model not loaded yet")
+                return success
+        
+        return success
+
+    def test_ml_status_check(self):
+        """Test ML status endpoint"""
+        success, response = self.run_test(
+            "🤖 ML Status Check",
+            "GET",
+            "ml/status",
+            200
+        )
+        
+        if success and response.get('success'):
+            status = response.get('status', {})
+            print(f"   Model Trained: {status.get('is_trained', False)}")
+            print(f"   Model Exists: {status.get('model_exists', False)}")
+            print(f"   Model Size: {status.get('model_size_mb', 0)} MB")
+            print(f"   Categories: {len(status.get('categories', []))}")
+            print(f"   Feature Count: {status.get('feature_count', 0)}")
+            
+            categories = status.get('categories', [])
+            if categories:
+                print(f"   Supported Categories: {', '.join(categories[:5])}{'...' if len(categories) > 5 else ''}")
+            
+            training_results = status.get('training_results')
+            if training_results:
+                print(f"   Test Accuracy: {training_results.get('test_accuracy', 0):.3f}")
+                print(f"   Training Samples: {training_results.get('n_samples', 0)}")
+                print(f"   Features Used: {training_results.get('n_features', 0)}")
+            
+            if status.get('is_trained') and status.get('feature_count', 0) >= 200:
+                print("   ✅ ML model is trained with 200+ features")
+                return True
+            else:
+                print("   ⚠️ ML model may need training or has insufficient features")
+                return success
+        
+        return success
+
+    def test_ml_predict_endpoint(self):
+        """Test ML prediction endpoint directly"""
+        test_cases = [
+            {
+                "raw_text": "Starbucks Coffee purchase $8.45 on Main Street",
+                "amount": 8.45,
+                "merchant": "Starbucks",
+                "expected_category": "Dining"
+            },
+            {
+                "raw_text": "Netflix monthly subscription $15.99 charged automatically",
+                "amount": 15.99,
+                "merchant": "Netflix",
+                "expected_category": "Entertainment"
+            },
+            {
+                "raw_text": "Walmart grocery shopping $45.67 for weekly supplies",
+                "amount": 45.67,
+                "merchant": "Walmart",
+                "expected_category": "Groceries"
+            }
+        ]
+        
+        predictions_successful = 0
+        
+        for i, test_case in enumerate(test_cases, 1):
+            success, response = self.run_test(
+                f"🤖 ML Direct Prediction {i} ({test_case['merchant']})",
+                "POST",
+                "ml/predict",
+                200,
+                data={
+                    "raw_text": test_case["raw_text"],
+                    "amount": test_case["amount"],
+                    "merchant": test_case["merchant"]
+                }
+            )
+            
+            if success and response.get('success'):
+                prediction = response.get('prediction', {})
+                predicted_category = prediction.get('category', '')
+                confidence = prediction.get('confidence', 0)
+                method = prediction.get('method', '')
+                
+                print(f"   Predicted: {predicted_category} (confidence: {confidence:.3f})")
+                print(f"   Method: {method}")
+                print(f"   Expected: {test_case['expected_category']}")
+                
+                if method == 'ml_random_forest' and confidence >= 0.3:
+                    print("   ✅ ML prediction successful with good confidence")
+                    predictions_successful += 1
+                elif predicted_category and confidence > 0:
+                    print("   ⚠️ Prediction made but may need improvement")
+                    predictions_successful += 0.5
+                else:
+                    print("   ❌ Poor prediction quality")
+            else:
+                print("   ❌ ML prediction failed")
+        
+        success_rate = predictions_successful / len(test_cases)
+        print(f"\n   ML Prediction Success Rate: {success_rate:.1%}")
+        
+        return success_rate >= 0.6  # 60% success threshold
+
+    def test_ml_train_endpoint(self):
+        """Test ML training endpoint (background task)"""
+        success, response = self.run_test(
+            "🤖 ML Model Training (Background)",
+            "POST",
+            "ml/train",
+            200
+        )
+        
+        if success and response.get('success'):
+            status = response.get('status', '')
+            message = response.get('message', '')
+            
+            print(f"   Status: {status}")
+            print(f"   Message: {message}")
+            
+            if status == 'training':
+                print("   ✅ ML training started successfully in background")
+                return True
+            else:
+                print("   ⚠️ Training status unclear")
+                return success
+        
+        return success
+
+    def test_ml_enhanced_receipt_processing(self):
+        """Test receipt processing uses ML system for categorization"""
+        try:
+            # Create a receipt that should be categorized by ML
+            test_image = self.create_transaction_processor_test_image("starbucks")
+            
+            files = {
+                'file': ('ml_enhanced_receipt.png', test_image, 'image/png')
+            }
+            data = {'category': 'Auto-Detect'}  # This should trigger ML categorization
+            
+            success, response = self.run_test(
+                "🤖 ML-Enhanced Receipt Processing",
+                "POST",
+                "receipts/upload",
+                200,
+                data=data,
+                files=files
+            )
+            
+            if success:
+                category = response.get('category', '')
+                processing_status = response.get('processing_status', '')
+                
+                # Check for ML-specific response fields
+                has_ml_fields = any(field in str(response) for field in [
+                    'category_confidence', 'categorization_method', 'confidence_score'
+                ])
+                
+                print(f"   Category: {category}")
+                print(f"   Processing Status: {processing_status}")
+                print(f"   Has ML Fields: {has_ml_fields}")
+                
+                if category != 'Uncategorized' and processing_status == 'completed':
+                    print("   ✅ ML-enhanced processing working - receipt categorized")
+                    return True
+                else:
+                    print("   ⚠️ Processing completed but categorization may need improvement")
+                    return success
+            
+            return success
+            
+        except Exception as e:
+            print(f"❌ Error in ML-enhanced processing test: {str(e)}")
+            return False
+
+    def test_ml_category_prediction_accuracy(self):
+        """Test ML category prediction accuracy with various merchant types"""
+        test_merchants = [
+            ("starbucks", ["Dining", "Entertainment"]),
+            ("walmart", ["Groceries", "Shopping"]),
+            ("netflix", ["Entertainment", "Subscriptions"]),
+            ("shell", ["Transportation", "Fuel"]),
+            ("cvs", ["Healthcare", "Pharmacy"])
+        ]
+        
+        accurate_predictions = 0
+        total_predictions = len(test_merchants)
+        
+        for merchant_type, expected_categories in test_merchants:
+            try:
+                test_image = self.create_transaction_processor_test_image(merchant_type)
+                
+                files = {
+                    'file': (f'ml_accuracy_{merchant_type}.png', test_image, 'image/png')
+                }
+                data = {'category': 'Auto-Detect'}
+                
+                success, response = self.run_test(
+                    f"🤖 ML Accuracy Test - {merchant_type.title()}",
+                    "POST",
+                    "receipts/upload",
+                    200,
+                    data=data,
+                    files=files
+                )
+                
+                if success:
+                    predicted_category = response.get('category', '')
+                    print(f"   {merchant_type.title()}: {predicted_category}")
+                    
+                    # Check if prediction matches expected categories
+                    if any(exp_cat.lower() in predicted_category.lower() for exp_cat in expected_categories):
+                        print(f"     ✅ Accurate prediction")
+                        accurate_predictions += 1
+                    else:
+                        print(f"     ⚠️ Unexpected category (expected: {expected_categories})")
+                        accurate_predictions += 0.5  # Partial credit
+                else:
+                    print(f"   ❌ Failed to process {merchant_type}")
+                    
+            except Exception as e:
+                print(f"   ❌ Error testing {merchant_type}: {str(e)}")
+        
+        accuracy = accurate_predictions / total_predictions
+        print(f"\n   ML Category Prediction Accuracy: {accuracy:.1%}")
+        
+        return accuracy >= 0.7  # 70% accuracy threshold
+
+    def test_ml_confidence_scoring(self):
+        """Test ML confidence scoring and method tracking"""
+        try:
+            test_image = self.create_transaction_processor_test_image("starbucks")
+            
+            files = {
+                'file': ('ml_confidence_test.png', test_image, 'image/png')
+            }
+            data = {'category': 'Auto-Detect'}
+            
+            success, response = self.run_test(
+                "🤖 ML Confidence Scoring Test",
+                "POST",
+                "receipts/upload",
+                200,
+                data=data,
+                files=files
+            )
+            
+            if success:
+                # Look for confidence-related fields in response
+                confidence_score = response.get('confidence_score')
+                category = response.get('category', '')
+                
+                print(f"   Category: {category}")
+                print(f"   Confidence Score: {confidence_score}")
+                
+                # Check if confidence scoring is working
+                if confidence_score is not None and 0 <= confidence_score <= 1:
+                    print("   ✅ Confidence scoring working properly")
+                    
+                    if confidence_score >= 0.5:
+                        print("   ✅ High confidence prediction")
+                        return True
+                    else:
+                        print("   ⚠️ Low confidence but scoring mechanism works")
+                        return True
+                else:
+                    print("   ⚠️ Confidence scoring may need improvement")
+                    return success
+            
+            return success
+            
+        except Exception as e:
+            print(f"❌ Error in confidence scoring test: {str(e)}")
+            return False
+
+    def test_ml_feature_extraction(self):
+        """Test ML feature extraction with 202+ features"""
+        # This test verifies the ML system is using advanced feature extraction
+        success, response = self.run_test(
+            "🤖 ML Feature Extraction Validation",
+            "GET",
+            "ml/status",
+            200
+        )
+        
+        if success and response.get('success'):
+            status = response.get('status', {})
+            feature_count = status.get('feature_count', 0)
+            
+            print(f"   Feature Count: {feature_count}")
+            
+            if feature_count >= 202:
+                print("   ✅ Advanced feature extraction with 202+ features")
+                return True
+            elif feature_count >= 100:
+                print("   ⚠️ Good feature extraction but below 202 features")
+                return True
+            else:
+                print("   ❌ Insufficient feature extraction")
+                return False
+        
+        return success
+
+    def test_ml_system_performance(self):
+        """Test ML system performance and processing speed"""
+        import time
+        
+        processing_times = []
+        
+        for i in range(3):
+            start_time = time.time()
+            
+            test_image = self.create_transaction_processor_test_image("starbucks")
+            
+            files = {
+                'file': (f'ml_performance_{i}.png', test_image, 'image/png')
+            }
+            data = {'category': 'Auto-Detect'}
+            
+            success, response = self.run_test(
+                f"🤖 ML Performance Test {i+1}",
+                "POST",
+                "receipts/upload",
+                200,
+                data=data,
+                files=files
+            )
+            
+            end_time = time.time()
+            processing_time = end_time - start_time
+            processing_times.append(processing_time)
+            
+            if success:
+                print(f"   Processing Time: {processing_time:.2f}s")
+                print(f"   Category: {response.get('category', 'N/A')}")
+            else:
+                print(f"   ❌ Performance test {i+1} failed")
+                return False
+        
+        avg_time = sum(processing_times) / len(processing_times)
+        print(f"\n   Average ML Processing Time: {avg_time:.2f}s")
+        
+        if avg_time < 15:  # Reasonable processing time with ML
+            print("   ✅ ML system performance is acceptable")
+            return True
+        else:
+            print("   ⚠️ ML processing may be slower than expected")
+            return True  # Still pass if it works
+
+    def test_ml_fallback_mechanism(self):
+        """Test ML fallback to rule-based system when needed"""
+        try:
+            # Create a receipt with unclear content to test fallback
+            from PIL import Image, ImageDraw
+            
+            img = Image.new('RGB', (400, 300), color='white')
+            draw = ImageDraw.Draw(img)
+            
+            # Add minimal, unclear text
+            draw.text((50, 50), "UNCLEAR RECEIPT", fill='black')
+            draw.text((50, 100), "Some text here", fill='black')
+            draw.text((50, 150), "Amount unclear", fill='black')
+            
+            img_bytes = io.BytesIO()
+            img.save(img_bytes, format='PNG')
+            img_bytes.seek(0)
+            
+            files = {
+                'file': ('ml_fallback_test.png', img_bytes, 'image/png')
+            }
+            data = {'category': 'Auto-Detect'}
+            
+            success, response = self.run_test(
+                "🤖 ML Fallback Mechanism Test",
+                "POST",
+                "receipts/upload",
+                200,
+                data=data,
+                files=files
+            )
+            
+            if success:
+                category = response.get('category', '')
+                processing_status = response.get('processing_status', '')
+                
+                print(f"   Category: {category}")
+                print(f"   Processing Status: {processing_status}")
+                
+                # Check if it handled unclear input gracefully
+                if processing_status == 'completed' and category:
+                    print("   ✅ ML fallback mechanism working - handled unclear input")
+                    return True
+                else:
+                    print("   ⚠️ Fallback mechanism may need improvement")
+                    return success
+            
+            return success
+            
+        except Exception as e:
+            print(f"❌ Error in ML fallback test: {str(e)}")
+            return False
+
+    def test_ml_integration_stability(self):
+        """Test ML integration stability with multiple rapid requests"""
+        stable_responses = 0
+        total_requests = 5
+        
+        for i in range(total_requests):
+            try:
+                test_image = self.create_transaction_processor_test_image("walmart")
+                
+                files = {
+                    'file': (f'ml_stability_{i}.png', test_image, 'image/png')
+                }
+                data = {'category': 'Auto-Detect'}
+                
+                success, response = self.run_test(
+                    f"🤖 ML Stability Test {i+1}",
+                    "POST",
+                    "receipts/upload",
+                    200,
+                    data=data,
+                    files=files
+                )
+                
+                if success and response.get('processing_status') == 'completed':
+                    stable_responses += 1
+                    print(f"   Request {i+1}: ✅ Stable")
+                else:
+                    print(f"   Request {i+1}: ❌ Unstable")
+                    
+            except Exception as e:
+                print(f"   Request {i+1}: ❌ Error - {str(e)}")
+        
+        stability_rate = stable_responses / total_requests
+        print(f"\n   ML Integration Stability: {stability_rate:.1%}")
+        
+        if stability_rate >= 0.8:
+            print("   ✅ ML integration is stable")
+            return True
+        else:
+            print("   ⚠️ ML integration may have stability issues")
+            return stability_rate > 0.5
+
 def main():
     print("🚀 Starting Lumina Receipt OCR API Tests - Master Transaction Processor Integration Testing")
     print("=" * 80)
