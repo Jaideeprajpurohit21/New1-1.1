@@ -479,21 +479,50 @@ const StatsCard = ({ title, value, icon: Icon, gradient }) => (
   </Card>
 );
 
-// Receipt Card Component
-const ReceiptCard = ({ receipt, onCategoryUpdate, onDelete, categories, detailed = false }) => {
+// Receipt Card Component with enhanced features
+const ReceiptCard = ({ receipt, onCategoryUpdate, onDelete, onViewOriginal, categories, detailed = false }) => {
   const [isUpdating, setIsUpdating] = useState(false);
 
   const getStatusBadge = (status) => {
     switch (status) {
       case 'completed':
-        return <Badge className="bg-green-100 text-green-800">Processed</Badge>;
+        return <Badge className="bg-green-100 text-green-800">
+          <CheckCircle className="w-3 h-3 mr-1" />
+          Processed
+        </Badge>;
       case 'processing':
-        return <Badge className="bg-blue-100 text-blue-800">Processing</Badge>;
+        return <Badge className="bg-blue-100 text-blue-800">
+          <Clock className="w-3 h-3 mr-1" />
+          Processing
+        </Badge>;
       case 'failed':
-        return <Badge className="bg-red-100 text-red-800">Failed</Badge>;
+        return <Badge className="bg-red-100 text-red-800">
+          <AlertCircle className="w-3 h-3 mr-1" />
+          Failed
+        </Badge>;
       default:
         return <Badge className="bg-gray-100 text-gray-800">Pending</Badge>;
     }
+  };
+
+  const getFileIcon = (filename) => {
+    const extension = filename.split('.').pop().toLowerCase();
+    if (extension === 'pdf') {
+      return <FilePdf className="h-4 w-4 text-red-500" />;
+    }
+    return <FileImage className="h-4 w-4 text-blue-500" />;
+  };
+
+  const getCategoryBadge = (category) => {
+    if (category === 'Uncategorized') {
+      return <span className="text-xs text-slate-500">Uncategorized</span>;
+    }
+    return (
+      <div className="flex items-center space-x-1">
+        <Bot className="w-3 h-3 text-purple-500" />
+        <span className="text-xs text-purple-700 font-medium">{category}</span>
+      </div>
+    );
   };
 
   const handleCategoryUpdate = async (newCategory) => {
@@ -503,14 +532,17 @@ const ReceiptCard = ({ receipt, onCategoryUpdate, onDelete, categories, detailed
   };
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="hover:shadow-md transition-all hover:border-blue-200">
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
             <div className="flex items-center space-x-2 mb-2">
-              <FileText className="h-4 w-4 text-slate-400" />
+              {getFileIcon(receipt.filename)}
               <span className="font-medium text-slate-900 truncate">{receipt.filename}</span>
               {getStatusBadge(receipt.processing_status)}
+              {receipt.category !== 'Uncategorized' && (
+                <Sparkles className="w-3 h-3 text-purple-500" title="Auto-categorized" />
+              )}
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-sm text-slate-600">
@@ -522,7 +554,7 @@ const ReceiptCard = ({ receipt, onCategoryUpdate, onDelete, categories, detailed
               )}
               {receipt.receipt_date && (
                 <div className="flex items-center space-x-1">
-                  <Calendar className="h-3 w-3" />
+                  <CalendarIcon className="h-3 w-3" />
                   <span>{receipt.receipt_date}</span>
                 </div>
               )}
@@ -543,15 +575,16 @@ const ReceiptCard = ({ receipt, onCategoryUpdate, onDelete, categories, detailed
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Uncategorized">Uncategorized</SelectItem>
-                    <SelectItem value="Travel">Travel</SelectItem>
-                    <SelectItem value="Meals">Meals</SelectItem>
-                    <SelectItem value="Office Supplies">Office Supplies</SelectItem>
-                    <SelectItem value="Entertainment">Entertainment</SelectItem>
-                    <SelectItem value="Transportation">Transportation</SelectItem>
-                    <SelectItem value="Utilities">Utilities</SelectItem>
-                    <SelectItem value="Healthcare">Healthcare</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
+                    <SelectItem value="Auto-Detect">🤖 Auto-Detect</SelectItem>
+                    <SelectItem value="Meals & Entertainment">🍽️ Meals & Entertainment</SelectItem>
+                    <SelectItem value="Groceries">🛒 Groceries</SelectItem>
+                    <SelectItem value="Transportation & Fuel">🚗 Transportation & Fuel</SelectItem>
+                    <SelectItem value="Office Supplies">📎 Office Supplies</SelectItem>
+                    <SelectItem value="Shopping">🛍️ Shopping</SelectItem>
+                    <SelectItem value="Utilities">⚡ Utilities</SelectItem>
+                    <SelectItem value="Healthcare">🏥 Healthcare</SelectItem>
+                    <SelectItem value="Travel">✈️ Travel</SelectItem>
+                    <SelectItem value="Uncategorized">📂 Uncategorized</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -581,6 +614,18 @@ const ReceiptCard = ({ receipt, onCategoryUpdate, onDelete, categories, detailed
                 {Math.round(receipt.confidence_score * 100)}%
               </div>
             )}
+            
+            {/* View Original Receipt Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onViewOriginal(receipt.id, receipt.filename)}
+              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+              title="View original receipt"
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+            
             <Button
               variant="ghost"
               size="sm"
