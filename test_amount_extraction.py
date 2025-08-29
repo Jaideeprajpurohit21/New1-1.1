@@ -26,36 +26,33 @@ def test_amount_extraction():
         "Payment of INR 2,000.00 to ELECTRICITY BOARD on 12th Mar 2024 successful."
     ]
     
-    # Enhanced amount patterns (copied from the updated server.py)
+    # Enhanced amount patterns (refined - copied from the updated server.py)
     amount_patterns = [
-        # International currency formats: INR 1,500.00, USD 29.99, EUR 15.99
-        r'(?:INR|USD|EUR|GBP|CAD|AUD)\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?',  # INR 1,500.00, USD 29.99
-        r'(?:₹|$|€|£|¥)\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?',              # ₹1,500.00, $29.99
+        # International currency formats with word boundaries: INR 1,500.00, USD 29.99
+        r'\b(?:INR|USD|EUR|GBP|CAD|AUD)\s+\d{1,3}(?:,\d{3})*(?:\.\d{2})?\b',  # INR 1,500.00, USD 29.99
+        r'(?:₹|€|£|¥)\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?',                    # ₹1,500.00, €29.99
         
-        # Standard formats: $12.34, 12.34, $12, 12
-        r'\$\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?',                         # $12.34, $1,500.00
-        r'\d{1,3}(?:,\d{3})*\.\d{2}',                                   # 12.34, 1,500.00
-        r'\d{1,3}(?:,\d{3})*\s*\.\s*\d{2}',                           # 12 . 34, 1,500 . 00 (with spaces)
+        # Dollar amounts with word boundaries
+        r'\$\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?',                            # $12.34, $1,500.00
         
-        # Transaction notification formats
-        r'(?:PURCHASE|spent|charged|debited|payment)\s+(?:INR|USD|EUR|GBP|\$|₹)\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?',  # PURCHASE INR 485.00, spent $29.99
-        r'(?:of|amount)\s+(?:INR|USD|EUR|GBP|\$|₹)\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?',  # of $15.99, amount INR 2,000.00
+        # Transaction notification formats - more specific
+        r'\b(?:PURCHASE|spent|charged|debited|payment)\s+(?:INR|USD|EUR|GBP|\$|₹)\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?\b',  # PURCHASE INR 485.00
+        r'\b(?:of|amount)\s+(?:INR|USD|EUR|GBP|\$|₹)\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?\b',  # of $15.99
         
-        # Receipt total formats: TOTAL: $12.34, Total $12.34, etc.
-        r'(?:TOTAL|total|Total)\s*:?\s*(?:INR|USD|EUR|GBP|\$|₹)?\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?',  # TOTAL: $12.34, TOTAL INR 485.00
-        r'(?:AMOUNT|amount|Amount)\s*:?\s*(?:INR|USD|EUR|GBP|\$|₹)?\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?', # AMOUNT: $12.34
-        r'(?:DUE|due|Due)\s*:?\s*(?:INR|USD|EUR|GBP|\$|₹)?\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?',       # DUE: $12.34
-        r'(?:BALANCE|balance|Balance)\s*:?\s*(?:INR|USD|EUR|GBP|\$|₹)?\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?', # BALANCE: $12.34
+        # Receipt total formats with currency indicators
+        r'(?:TOTAL|AMOUNT|DUE|BALANCE)\s*:?\s*(?:INR|USD|EUR|GBP|\$|₹)\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?',
         
-        # Cash and payment amounts
-        r'(?:CASH|cash|Cash)\s*:?\s*(?:INR|USD|EUR|GBP|\$|₹)?\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?',    # CASH: $12.34
-        r'(?:CHANGE|change|Change)\s*:?\s*(?:INR|USD|EUR|GBP|\$|₹)?\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?', # CHANGE: $12.34
+        # Cash and payment amounts with currency
+        r'(?:CASH|CHANGE)\s*:?\s*(?:INR|USD|EUR|GBP|\$|₹)\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?',
         
         # Subscription and automatic payment formats
-        r'(?:subscription|monthly|automatically)\s+(?:of\s+)?(?:INR|USD|EUR|GBP|\$|₹)?\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?', # monthly subscription of $15.99
+        r'(?:subscription|monthly)\s+(?:of\s+)?(?:INR|USD|EUR|GBP|\$|₹)\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?',
         
-        # Basic number formats (fallback)
-        r'\d{1,3}(?:,\d{3})*(?:\.\d{2})?',                             # 1,500.00, 29.99 (basic fallback)
+        # Standalone currency amounts (more restrictive)
+        r'(?:^|\s)(?:INR|USD|EUR|GBP|\$|₹)\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?(?=\s|$)',  # Currency followed by amount at word boundaries
+        
+        # Decimal amounts only when preceded by currency context or keywords
+        r'(?:price|cost|total|amount|balance|due|paid|pay)\s+\d{1,3}(?:,\d{3})*\.\d{2}',  # price 12.34
     ]
     
     def clean_amount_text(amount_text: str) -> str:
