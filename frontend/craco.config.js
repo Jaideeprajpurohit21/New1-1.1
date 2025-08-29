@@ -1,46 +1,26 @@
-// Load configuration from environment or config file
-const path = require('path');
+/*
+ * LUMINA - AI-POWERED RECEIPT MANAGEMENT SYSTEM
+ * CRACO Configuration for Create React App
+ * 
+ * Copyright (c) 2024-2025 Lumina Technologies. All rights reserved.
+ * 
+ * PROPRIETARY SOFTWARE - UNAUTHORIZED USE PROHIBITED
+ * This software contains confidential and proprietary information of Lumina Technologies.
+ * Any reproduction, distribution, or transmission of this software, in whole or in part,
+ * without the prior written consent of Lumina Technologies is strictly prohibited.
+ * 
+ * Trade secrets contained herein are protected under applicable laws.
+ * Unauthorized disclosure may result in civil and criminal prosecution.
+ * 
+ * For licensing information, contact: legal@luminatech.com
+ */
 
-// Environment variable overrides
-const config = {
-  disableHotReload: process.env.DISABLE_HOT_RELOAD === 'true',
-};
+const path = require('path');
 
 module.exports = {
   webpack: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
-    },
-    configure: (webpackConfig) => {
-      
-      // Disable hot reload completely if environment variable is set
-      if (config.disableHotReload) {
-        // Remove hot reload related plugins
-        webpackConfig.plugins = webpackConfig.plugins.filter(plugin => {
-          return !(plugin.constructor.name === 'HotModuleReplacementPlugin');
-        });
-        
-        // Disable watch mode
-        webpackConfig.watch = false;
-        webpackConfig.watchOptions = {
-          ignored: /.*/, // Ignore all files
-        };
-      } else {
-        // Add ignored patterns to reduce watched directories
-        webpackConfig.watchOptions = {
-          ...webpackConfig.watchOptions,
-          ignored: [
-            '**/node_modules/**',
-            '**/.git/**',
-            '**/build/**',
-            '**/dist/**',
-            '**/coverage/**',
-            '**/public/**',
-          ],
-        };
-      }
-      
-      return webpackConfig;
     },
   },
 };
