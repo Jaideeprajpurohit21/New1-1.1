@@ -252,7 +252,7 @@ def test_extract_date():
         },
         {
             'input': "You spent $29.99 at Amazon.com on Oct 5. Your card ending in 1234 was charged.",
-            'expected': f"{datetime.now().year}-10-05",
+            'expected': f"{datetime.now().year - 1}-10-05" if datetime.now().month < 10 else f"{datetime.now().year}-10-05",
             'description': "Month name format (Oct 5)"
         },
         {
