@@ -16,12 +16,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs';
 import { Separator } from './components/ui/separator';
 import { Alert, AlertDescription } from './components/ui/alert';
 import { Progress } from './components/ui/progress';
+import { Checkbox } from './components/ui/checkbox';
+import { Calendar } from './components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from './components/ui/popover';
 
 // Import Lucide icons
 import { 
   Upload, 
   FileText, 
-  Calendar, 
+  Calendar as CalendarIcon, 
   DollarSign, 
   Tag, 
   Download, 
@@ -34,7 +37,14 @@ import {
   BarChart3,
   Settings,
   Plus,
-  Search
+  Search,
+  Eye,
+  ExternalLink,
+  Filter,
+  FileImage,
+  FilePdf,
+  Bot,
+  Sparkles
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
