@@ -186,27 +186,43 @@ const LuminaApp = () => {
     }
   };
 
-  // Export receipts as CSV
-  const exportReceipts = async () => {
+  // Enhanced CSV export with filters
+  const exportReceipts = async (filters = null) => {
     try {
-      const response = await axios.get(`${API}/receipts/export/csv`, {
+      const response = await axios.post(`${API}/receipts/export/csv`, filters || {}, {
         responseType: 'blob'
       });
       
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', 'lumina_receipts.csv');
+      link.setAttribute('download', 'lumina_tax_export.csv');
       document.body.appendChild(link);
       link.click();
       link.remove();
       
-      showNotification('Receipts exported successfully!', 'success');
+      showNotification('Tax-ready CSV exported successfully!', 'success');
+      setShowExportDialog(false);
     } catch (error) {
       console.error('Error exporting receipts:', error);
       showNotification('Failed to export receipts', 'error');
     }
   };
+
+  // View original receipt file
+  const viewOriginalReceipt = (receiptId, filename) => {
+    const fileUrl = `${BACKEND_URL}/api/receipts/${receiptId}/file`;
+    window.open(fileUrl, '_blank');
+  };
+
+  // Real-time search with debouncing
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      fetchReceipts(searchTerm, selectedCategory);
+    }, 300);
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchTerm, selectedCategory, fetchReceipts]);
 
   // Filter receipts
   const filteredReceipts = receipts.filter(receipt => {
