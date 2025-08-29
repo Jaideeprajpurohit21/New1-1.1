@@ -906,10 +906,13 @@ const ExportDialog = ({ onExport, disabled, categories, open, onOpenChange }) =>
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={filters.endDate}
-                    onSelect={(date) => setFilters(prev => ({ ...prev, endDate: date }))}
+                  <Input
+                    type="date"
+                    value={filters.endDate ? filters.endDate.toISOString().split('T')[0] : ''}
+                    onChange={(e) => setFilters(prev => ({ 
+                      ...prev, 
+                      endDate: e.target.value ? new Date(e.target.value) : null 
+                    }))}
                   />
                 </PopoverContent>
               </Popover>
