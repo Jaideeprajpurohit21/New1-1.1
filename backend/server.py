@@ -296,12 +296,18 @@ class ReceiptOCRProcessor:
             }
     
     def parse_receipt_text(self, full_text: str, ocr_results: List) -> Dict[str, Any]:
-        """Parse OCR results into structured receipt data with enhanced search text and improved amount detection"""
+        """Parse OCR results into structured receipt data using advanced transaction processor"""
         try:
-            # Sort results by vertical position for better parsing
-            sorted_results = sorted(ocr_results, key=lambda x: x[0][0][1])  # Sort by top-left y coordinate
+            logger.info(f"Processing receipt text with advanced transaction processor: {full_text[:100]}...")
+            
+            # Use the advanced transaction processor to extract all information
+            processed_transaction = self.transaction_processor.process_transaction(full_text)
+            
+            # Sort OCR results by vertical position for line items extraction
+            sorted_results = sorted(ocr_results, key=lambda x: x[0][0][1])  
             
             lines = []
+            confidences = []
             for result in sorted_results:
                 bbox, text, confidence = result
                 if confidence > 0.3:  # Filter low confidence results
@@ -310,153 +316,121 @@ class ReceiptOCRProcessor:
                         'confidence': confidence,
                         'y_position': bbox[0][1]
                     })
+                    confidences.append(confidence)
             
-            # Initialize parsed data
+            # Extract line items (preserve existing logic for detailed receipt parsing)
+            items = self._extract_line_items(lines)
+            
+            # Build parsed data using transaction processor results
             parsed_data = {
-                'merchant_name': None,
-                'receipt_date': None,
-                'total_amount': None,
-                'items': [],
-                'confidence_score': 0.0,
-                'searchable_text': full_text  # Add for enhanced search
+                'merchant_name': processed_transaction.get('merchant'),
+                'receipt_date': processed_transaction.get('date'),
+                'total_amount': processed_transaction.get('amount'),
+                'items': items,
+                'confidence_score': sum(confidences) / len(confidences) if confidences else 0.0,
+                'searchable_text': full_text,
+                'category_prediction': {
+                    'category': processed_transaction.get('category', 'Uncategorized'),
+                    'confidence': processed_transaction.get('confidence', 0.0),
+                    'processing_status': processed_transaction.get('processing_status', 'completed')
+                }
             }
             
-            # Enhanced patterns for parsing
-            date_patterns = [
-                r'\d{1,2}/\d{1,2}/\d{2,4}',
-                r'\d{1,2}-\d{1,2}-\d{2,4}',
-                r'\d{4}-\d{1,2}-\d{1,2}',
-                r'\d{1,2}\.\d{1,2}\.\d{2,4}'
-            ]
-            
-            # Enhanced amount patterns to capture various receipt and transaction formats
-            amount_patterns = [
-                # International currency formats with word boundaries: INR 1,500.00, USD 29.99
-                r'\b(?:INR|USD|EUR|GBP|CAD|AUD)\s+\d{1,3}(?:,\d{3})*(?:\.\d{2})?\b',  # INR 1,500.00, USD 29.99
-                r'(?:₹|€|£|¥)\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?',                    # ₹1,500.00, €29.99
-                
-                # Dollar amounts with word boundaries
-                r'\$\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?',                            # $12.34, $1,500.00
-                
-                # Transaction notification formats - more specific
-                r'\b(?:PURCHASE|spent|charged|debited|payment)\s+(?:INR|USD|EUR|GBP|\$|₹)\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?\b',  # PURCHASE INR 485.00
-                r'\b(?:of|amount)\s+(?:INR|USD|EUR|GBP|\$|₹)\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?\b',  # of $15.99
-                
-                # Receipt total formats with currency indicators
-                r'(?:TOTAL|AMOUNT|DUE|BALANCE)\s*:?\s*(?:INR|USD|EUR|GBP|\$|₹)\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?',
-                
-                # Cash and payment amounts with currency
-                r'(?:CASH|CHANGE)\s*:?\s*(?:INR|USD|EUR|GBP|\$|₹)\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?',
-                
-                # Subscription and automatic payment formats
-                r'(?:subscription|monthly)\s+(?:of\s+)?(?:INR|USD|EUR|GBP|\$|₹)\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?',
-                
-                # Standalone currency amounts (more restrictive)
-                r'(?:^|\s)(?:INR|USD|EUR|GBP|\$|₹)\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?(?=\s|$)',  # Currency followed by amount at word boundaries
-                
-                # Decimal amounts only when preceded by currency context or keywords
-                r'(?:price|cost|total|amount|balance|due|paid|pay)\s+\d{1,3}(?:,\d{3})*\.\d{2}',  # price 12.34
-            ]
-            
-            # Keywords that typically precede or contain total amounts (enhanced for transactions)
-            total_keywords = ['total', 'amount', 'sum', 'balance', 'due', 'cash', 'change', 'grand', 'subtotal', 
-                            'purchase', 'spent', 'charged', 'debited', 'payment', 'subscription', 'monthly']
-            
-            confidences = []
-            
-            for i, line in enumerate(lines):
-                text = line['text'].lower()
-                original_text = line['text']
-                confidence = line['confidence']
-                confidences.append(confidence)
-                
-                # Try to identify merchant (usually first substantial line without numbers)
-                if not parsed_data['merchant_name'] and len(original_text) > 3:
-                    if not re.search(r'\d', text) and not any(keyword in text for keyword in total_keywords):
-                        parsed_data['merchant_name'] = original_text.strip()
-                
-                # Look for dates using robust extraction
-                if not parsed_data['receipt_date']:
-                    robust_date = self._extract_transaction_date_robust(full_text)
-                    if robust_date:
-                        parsed_data['receipt_date'] = robust_date
-                        logger.info(f"Found receipt date via robust extraction: {robust_date}")
-                    else:
-                        # Fallback to pattern-based extraction
-                        for date_pattern in date_patterns:
-                            date_match = re.search(date_pattern, text)
-                            if date_match:
-                                parsed_data['receipt_date'] = date_match.group()
-                                break
-                
-                # Enhanced total amount detection using robust extraction
-                if not parsed_data['total_amount']:
-                    # Try robust extraction first
-                    robust_amount = self._extract_transaction_amount_robust(full_text)
-                    if robust_amount:
-                        parsed_data['total_amount'] = robust_amount
-                        logger.info(f"Found total amount via robust extraction: {robust_amount} from text: {full_text[:100]}...")
-                    else:
-                        # Fallback to pattern-based extraction
-                        # First check if line contains total keywords
-                        if any(keyword in text for keyword in total_keywords):
-                            # Try each amount pattern
-                            for pattern in amount_patterns:
-                                amount_match = re.search(pattern, original_text, re.IGNORECASE)
-                                if amount_match:
-                                    amount_text = amount_match.group()
-                                    # Use robust amount extraction for this match too
-                                    cleaned_amount = self._extract_transaction_amount_robust(amount_text)
-                                    if cleaned_amount:
-                                        parsed_data['total_amount'] = cleaned_amount
-                                        logger.info(f"Found total amount via pattern: {cleaned_amount} from text: {original_text}")
-                                        break
-                    
-                    # If still no total found, try to find any dollar amount in lines with total keywords
-                    if not parsed_data['total_amount']:
-                        for pattern in amount_patterns[:4]:  # Use basic patterns only
-                            amount_match = re.search(pattern, original_text, re.IGNORECASE)
-                            if amount_match and any(keyword in text for keyword in total_keywords):
-                                amount_text = amount_match.group()
-                                cleaned_amount = self._extract_transaction_amount_robust(amount_text)
-                                if cleaned_amount:
-                                    parsed_data['total_amount'] = cleaned_amount
-                                    break
-                
-                # Look for line items (text with amounts, excluding totals and taxes)
-                exclude_keywords = ['total', 'subtotal', 'tax', 'change', 'balance', 'due', 'cash', 'tip']
-                if not any(keyword in text for keyword in exclude_keywords):
-                    for pattern in amount_patterns[:4]:  # Use basic amount patterns for line items
-                        amount_match = re.search(pattern, original_text, re.IGNORECASE)
-                        if amount_match:
-                            amount_text = amount_match.group()
-                            cleaned_amount = self._extract_transaction_amount_robust(amount_text)
-                            item_text = original_text.replace(amount_match.group(), '').strip()
-                            
-                            if cleaned_amount and item_text and len(item_text) > 2:
-                                parsed_data['items'].append({
-                                    'description': item_text,
-                                    'amount': cleaned_amount,
-                                    'confidence': confidence
-                                })
-                            break
-            
-            # Calculate average confidence
-            if confidences:
-                parsed_data['confidence_score'] = sum(confidences) / len(confidences)
+            logger.info(f"Advanced processing completed - Merchant: {parsed_data['merchant_name']}, "
+                       f"Amount: {parsed_data['total_amount']}, Date: {parsed_data['receipt_date']}, "
+                       f"Category: {processed_transaction.get('category')} "
+                       f"(confidence: {processed_transaction.get('confidence', 0):.3f})")
             
             return parsed_data
             
         except Exception as e:
-            logger.error(f"Error parsing receipt text: {str(e)}")
-            return {
-                'merchant_name': None,
-                'receipt_date': None,
-                'total_amount': None,
-                'items': [],
-                'confidence_score': 0.0,
-                'searchable_text': full_text
+            logger.error(f"Error in advanced receipt parsing: {str(e)}")
+            # Fallback to basic extraction
+            return self._fallback_parse_receipt_text(full_text, ocr_results)
+    
+    def _extract_line_items(self, lines: List[Dict]) -> List[Dict]:
+        """Extract line items from OCR results"""
+        items = []
+        
+        # Basic amount patterns for line items
+        amount_patterns = [
+            r'\$\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?',                            # $12.34
+            r'(?:₹|€|£|¥)\s*\d{1,3}(?:,\d{3})*(?:\.\d{2})?',                   # ₹12.34
+            r'\b(?:INR|USD|EUR|GBP)\s+\d{1,3}(?:,\d{3})*(?:\.\d{2})?\b',       # INR 12.34
+        ]
+        
+        exclude_keywords = ['total', 'subtotal', 'tax', 'change', 'balance', 'due', 'cash', 'tip']
+        
+        for line in lines:
+            text_lower = line['text'].lower()
+            original_text = line['text']
+            confidence = line['confidence']
+            
+            # Skip lines with total/summary keywords
+            if any(keyword in text_lower for keyword in exclude_keywords):
+                continue
+                
+            # Look for amounts in this line
+            for pattern in amount_patterns:
+                amount_match = re.search(pattern, original_text, re.IGNORECASE)
+                if amount_match:
+                    # Extract numeric amount using transaction processor's robust extraction
+                    from robust_amount_extractor import extract_amount
+                    amount_value = extract_amount(amount_match.group())
+                    
+                    # Clean up item description
+                    item_text = original_text.replace(amount_match.group(), '').strip()
+                    item_text = re.sub(r'\s+', ' ', item_text)  # Normalize whitespace
+                    
+                    if amount_value and item_text and len(item_text) > 2:
+                        items.append({
+                            'description': item_text,
+                            'amount': str(amount_value),
+                            'confidence': confidence
+                        })
+                    break
+        
+        return items
+    
+    def _fallback_parse_receipt_text(self, full_text: str, ocr_results: List) -> Dict[str, Any]:
+        """Fallback parsing method when advanced processor fails"""
+        logger.warning("Using fallback receipt parsing method")
+        
+        # Basic fallback implementation
+        parsed_data = {
+            'merchant_name': None,
+            'receipt_date': None,
+            'total_amount': None,
+            'items': [],
+            'confidence_score': 0.0,
+            'searchable_text': full_text,
+            'category_prediction': {
+                'category': 'Uncategorized',
+                'confidence': 0.0,
+                'processing_status': 'fallback'
             }
+        }
+        
+        # Try to extract basic info using robust extractors
+        try:
+            from robust_amount_extractor import extract_amount
+            from robust_date_extractor import extract_date
+            
+            parsed_data['total_amount'] = extract_amount(full_text)
+            parsed_data['receipt_date'] = extract_date(full_text)
+            
+            # Simple merchant extraction (first non-numeric line)
+            lines = [line.split('\t')[1] if '\t' in line else line 
+                    for line in full_text.split('\n')[:5]]  # First 5 lines
+            for line in lines:
+                if len(line.strip()) > 3 and not re.search(r'\d', line):
+                    parsed_data['merchant_name'] = line.strip()
+                    break
+                    
+        except Exception as e:
+            logger.error(f"Error in fallback parsing: {str(e)}")
+        
+        return parsed_data
     
     def _extract_transaction_amount_robust(self, text: str) -> Optional[str]:
         """
