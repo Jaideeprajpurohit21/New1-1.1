@@ -1,0 +1,151 @@
+{
+  "train_accuracy": 1.0,
+  "test_accuracy": 0.7,
+  "cv_mean_accuracy": 0.5897435897435898,
+  "cv_std_accuracy": 0.0725237724293895,
+  "classification_report": {
+    "Dining": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1-score": 0.6666666666666666,
+      "support": 2.0
+    },
+    "Entertainment": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 1.0
+    },
+    "Groceries": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 1.0
+    },
+    "Healthcare": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 1.0
+    },
+    "Shopping": {
+      "precision": 0.5,
+      "recall": 1.0,
+      "f1-score": 0.6666666666666666,
+      "support": 1.0
+    },
+    "Subscriptions": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 1.0
+    },
+    "Transportation": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 1.0
+    },
+    "Travel": {
+      "precision": 0.5,
+      "recall": 1.0,
+      "f1-score": 0.6666666666666666,
+      "support": 1.0
+    },
+    "Utilities": {
+      "precision": 0.5,
+      "recall": 1.0,
+      "f1-score": 0.6666666666666666,
+      "support": 1.0
+    },
+    "accuracy": 0.7,
+    "macro avg": {
+      "precision": 0.6111111111111112,
+      "recall": 0.7222222222222222,
+      "f1-score": 0.6296296296296297,
+      "support": 10.0
+    },
+    "weighted avg": {
+      "precision": 0.65,
+      "recall": 0.7,
+      "f1-score": 0.6333333333333333,
+      "support": 10.0
+    }
+  },
+  "top_features": [
+    [
+      "amount_sqrt",
+      0.046845245364245454
+    ],
+    [
+      "text_keywords_shopping",
+      0.03841882954562462
+    ],
+    [
+      "has_transportation_keywords",
+      0.030225664004465528
+    ],
+    [
+      "time_pattern_nan",
+      0.02840900519134321
+    ],
+    [
+      "month",
+      0.02758264344763614
+    ],
+    [
+      "has_shopping_keywords",
+      0.025996377315723764
+    ],
+    [
+      "text_keywords_entertainment",
+      0.024669735589835966
+    ],
+    [
+      "merchant_name_length",
+      0.022502086813915384
+    ],
+    [
+      "tfidf_2024",
+      0.021858667872594415
+    ],
+    [
+      "has_travel_keywords",
+      0.021678172998660306
+    ],
+    [
+      "day_of_week",
+      0.02158116728335013
+    ],
+    [
+      "tfidf_99",
+      0.020208754400740797
+    ],
+    [
+      "numeric_value_count",
+      0.018454814716004787
+    ],
+    [
+      "amount_log",
+      0.018414323101155847
+    ],
+    [
+      "amount_bucket_large",
+      0.01839977784224284
+    ]
+  ],
+  "n_samples": 49,
+  "n_features": 202,
+  "categories": [
+    "Dining",
+    "Entertainment",
+    "Groceries",
+    "Healthcare",
+    "Shopping",
+    "Subscriptions",
+    "Transfer",
+    "Transportation",
+    "Travel",
+    "Utilities"
+  ]
+}
