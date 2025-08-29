@@ -128,11 +128,17 @@ class ReceiptOCRProcessor:
         }
     
     def initialize_reader(self):
-        """Initialize EasyOCR reader"""
+        """Initialize EasyOCR reader with GPU acceleration"""
         try:
             import easyocr
-            self.reader = easyocr.Reader(['en'], gpu=False)  # Use CPU for better compatibility
-            logger.info("EasyOCR initialized successfully")
+            # Try GPU first, fallback to CPU if GPU not available
+            try:
+                self.reader = easyocr.Reader(['en'], gpu=True)
+                logger.info("EasyOCR initialized successfully with GPU acceleration")
+            except Exception as gpu_error:
+                logger.warning(f"GPU initialization failed ({gpu_error}), falling back to CPU")
+                self.reader = easyocr.Reader(['en'], gpu=False)
+                logger.info("EasyOCR initialized successfully with CPU")
         except ImportError:
             logger.error("EasyOCR not installed. Install with: pip install easyocr")
             self.reader = None
