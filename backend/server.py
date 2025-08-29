@@ -40,6 +40,10 @@ import re
 from pdf2image import convert_from_path
 import tempfile
 
+# Import the transaction processor
+import sys
+sys.path.append('..')
+from transaction_processor import TransactionProcessor
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
