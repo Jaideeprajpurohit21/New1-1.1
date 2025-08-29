@@ -489,19 +489,33 @@ class MLCategoryPredictor:
             # Convert to DataFrame to maintain feature order
             features_df = pd.DataFrame([features])
             
-            # Handle missing columns (fill with defaults)
+            # Handle categorical features with same encoding as training
+            categorical_features = ['amount_bucket', 'merchant_category', 'time_pattern']
+            for col in categorical_features:
+                if col in features_df.columns:
+                    features_df[col] = features_df[col].astype(str)
+            
+            # One-hot encode categorical features (need to match training columns)
+            features_encoded = pd.get_dummies(features_df, columns=categorical_features, prefix=categorical_features)
+            
+            # Add missing columns that were present during training
+            missing_columns = []
             for feature_name in self.feature_names:
                 if feature_name.startswith('tfidf_'):
-                    continue  # Skip TF-IDF features for now
-                if feature_name not in features_df.columns:
-                    features_df[feature_name] = 0
+                    continue  # Skip TF-IDF features
+                if feature_name not in features_encoded.columns:
+                    features_encoded[feature_name] = 0
+                    missing_columns.append(feature_name)
+            
+            # Reorder columns to match training order
+            structured_feature_names = [col for col in self.feature_names if not col.startswith('tfidf_')]
+            features_encoded = features_encoded[structured_feature_names]
             
             # Get TF-IDF features
             text_tfidf = self.tfidf_vectorizer.transform([raw_text]).toarray()
             
             # Combine features
-            structured_features = features_df[[col for col in self.feature_names if not col.startswith('tfidf_')]].values
-            combined_features = np.hstack([structured_features, text_tfidf])
+            combined_features = np.hstack([features_encoded.values, text_tfidf])
             
             # Scale features
             X_scaled = self.scaler.transform(combined_features)
