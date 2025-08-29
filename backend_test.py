@@ -26,7 +26,7 @@ from datetime import datetime
 from pathlib import Path
 
 class LuminaAPITester:
-    def __init__(self, base_url="https://smart-receipts-11.preview.emergentagent.com"):
+    def __init__(self, base_url="https://expensify-ai.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
