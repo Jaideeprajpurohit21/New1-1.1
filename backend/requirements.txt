@@ -7,7 +7,7 @@
 # LUMINA - AI-POWERED RECEIPT MANAGEMENT SYSTEM
 # Backend Python Dependencies
 # 
-# Copyright (c) 2024-2025 Lumina Technologies. All rights reserved.
+# Copyright (c) 2024 Jaideep Singh Rajpurohit. All rights reserved.
 # PROPRIETARY SOFTWARE - UNAUTHORIZED USE PROHIBITED
 
 fastapi>=0.104.1
