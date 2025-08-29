@@ -187,13 +187,13 @@ def extract_amount(text: str) -> Optional[float]:
     
     # Step 3: Select the best amount based on priority
     if transaction_amounts:
-        # Sort by priority score (lower = better)
-        transaction_amounts.sort(key=lambda x: x[1])
+        # Sort by priority score first, then by position (earlier = better for ties)
+        transaction_amounts.sort(key=lambda x: (x[1], x[3]))
         best_amount = transaction_amounts[0][0]
         
         # Additional validation: prefer reasonable transaction amounts
         # Avoid extremely large numbers that might be balances or IDs
-        reasonable_amounts = [amt for amt, score, keyword in transaction_amounts if 0.01 <= amt <= 100000]
+        reasonable_amounts = [amt for amt, score, keyword, pos in transaction_amounts if 0.01 <= amt <= 100000]
         if reasonable_amounts:
             return reasonable_amounts[0]
         else:
