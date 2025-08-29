@@ -353,8 +353,9 @@ class ReceiptOCRProcessor:
                 r'\d{1,3}(?:,\d{3})*(?:\.\d{2})?',                             # 1,500.00, 29.99 (basic fallback)
             ]
             
-            # Keywords that typically precede or contain total amounts
-            total_keywords = ['total', 'amount', 'sum', 'balance', 'due', 'cash', 'change', 'grand', 'subtotal']
+            # Keywords that typically precede or contain total amounts (enhanced for transactions)
+            total_keywords = ['total', 'amount', 'sum', 'balance', 'due', 'cash', 'change', 'grand', 'subtotal', 
+                            'purchase', 'spent', 'charged', 'debited', 'payment', 'subscription', 'monthly']
             
             confidences = []
             
