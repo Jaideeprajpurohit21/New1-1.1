@@ -102,7 +102,35 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "User wants comprehensive enhancements across all areas starting with Phase 1: Fix receipt click functionality to show detailed expanded view when clicking on receipts. The expanded view should show detailed features like time, date, amount and include a button to see the real image of that receipt."
+user_problem_statement: "User wants comprehensive enhancements across all areas starting with Phase 1: Fix receipt click functionality to show detailed expanded view when clicking on receipts. The expanded view should show detailed features like time, date, amount and include a button to see the real image of that receipt. URGENT: Fix slow OCR performance by enabling GPU acceleration and improve amount detection with better regex patterns for various dollar formats like $12.34, 12.34, TOTAL: $12.34, etc."
+
+backend:
+  - task: "Receipt file serving for original image view"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Backend endpoint /api/receipts/{id}/file already exists and serves original uploaded files"
+      - working: true
+        agent: "testing"
+        comment: "Comprehensive backend testing completed successfully. All 18 API endpoints tested: GET /api/receipts (✅), GET /api/categories (✅), POST /api/receipts/upload (✅), GET /api/receipts/{id} (✅), GET /api/receipts/{id}/file (✅), PUT /api/receipts/{id}/category (✅), DELETE /api/receipts/{id} (✅), search functionality (✅), OCR processing (✅), auto-categorization (✅), PDF support (✅), CSV export (✅). Backend is fully operational with proper error handling and file management."
+
+  - task: "OCR GPU acceleration and enhanced amount detection"
+    implemented: false
+    working: "NA"
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Need to enable GPU acceleration in EasyOCR initialization and enhance regex patterns for better amount detection (formats: $12.34, 12.34, TOTAL: $12.34, etc.)"
 
 backend:
   - task: "Receipt file serving for original image view"
