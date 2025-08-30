@@ -328,27 +328,11 @@ class ReceiptOCRProcessor:
             receipt_data['raw_text'] = full_text
             receipt_data['success'] = True
             
-            # Auto-categorize based on extracted data (now returns dict with confidence)
-            auto_category_result = self.auto_categorize(
-                receipt_data.get('merchant_name', ''),
-                full_text
-            )
-            
-            # Handle both new dict format and legacy string format
-            if isinstance(auto_category_result, dict):
-                receipt_data['suggested_category'] = auto_category_result.get('category', 'Uncategorized')
-                receipt_data['category_confidence'] = auto_category_result.get('confidence', 0.0)
-                receipt_data['categorization_method'] = auto_category_result.get('method', 'unknown')
-            else:
-                # Legacy string format fallback
-                receipt_data['suggested_category'] = auto_category_result
-                receipt_data['category_confidence'] = 0.0
-                receipt_data['categorization_method'] = 'legacy'
-            
             # Log processing results for debugging
             logger.info(f"OCR processed successfully. Found {len(all_results)} text elements, "
                        f"merchant: {receipt_data.get('merchant_name', 'N/A')}, "
                        f"total: {receipt_data.get('total_amount', 'N/A')}, "
+                       f"category: {receipt_data.get('suggested_category', 'N/A')}, "
                        f"confidence: {receipt_data.get('confidence_score', 0):.2f}")
             
             return receipt_data
