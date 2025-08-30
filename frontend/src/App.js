@@ -991,8 +991,8 @@ const UploadReceiptDialog = ({ onUpload, uploading }) => {
   const handleUpload = async () => {
     if (selectedFile) {
       try {
-        // Show uploading state
-        setUploading(true);
+        // Show uploading state - use the existing uploadingReceipt state
+        // (The parent component manages this state)
         
         // Perform upload
         await onUpload(selectedFile, category);
@@ -1007,8 +1007,6 @@ const UploadReceiptDialog = ({ onUpload, uploading }) => {
         // Error handling - don't close modal so user can retry
         console.error('Upload failed:', error);
         // Error notification is handled in onUpload function
-      } finally {
-        setUploading(false);
       }
     }
   };
