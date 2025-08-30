@@ -403,11 +403,9 @@ class ReceiptOCRProcessor:
                 'items': items,
                 'confidence_score': sum(confidences) / len(confidences) if confidences else 0.0,
                 'searchable_text': full_text,
-                'category_prediction': {
-                    'category': processed_transaction.get('category', 'Uncategorized'),
-                    'confidence': processed_transaction.get('confidence', 0.0),
-                    'processing_status': processed_transaction.get('processing_status', 'completed')
-                }
+                'suggested_category': processed_transaction.get('category', 'Uncategorized'),
+                'category_confidence': processed_transaction.get('confidence', 0.0),
+                'categorization_method': 'advanced_ml' if processed_transaction.get('confidence', 0) > 0.3 else 'rule_based'
             }
             
             logger.info(f"Advanced processing completed - Merchant: {parsed_data['merchant_name']}, "
