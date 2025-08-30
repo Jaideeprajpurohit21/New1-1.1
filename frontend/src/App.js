@@ -970,10 +970,26 @@ const UploadReceiptDialog = ({ onUpload, uploading }) => {
 
   const handleUpload = async () => {
     if (selectedFile) {
-      await onUpload(selectedFile, category);
-      setOpen(false);
-      setSelectedFile(null);
-      setCategory('Auto-Detect');
+      try {
+        // Show uploading state
+        setUploading(true);
+        
+        // Perform upload
+        await onUpload(selectedFile, category);
+        
+        // Success - close modal and reset state
+        setOpen(false);
+        setSelectedFile(null);
+        setCategory('Auto-Detect');
+        
+        // The onUpload function already shows success notification
+      } catch (error) {
+        // Error handling - don't close modal so user can retry
+        console.error('Upload failed:', error);
+        // Error notification is handled in onUpload function
+      } finally {
+        setUploading(false);
+      }
     }
   };
 
