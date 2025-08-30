@@ -499,19 +499,26 @@ class MLCategoryPredictor:
             
             # Handle categorical features with same encoding as training
             categorical_features = ['amount_bucket', 'merchant_category', 'time_pattern']
-            for col in categorical_features:
-                if col in features_df.columns:
-                    features_df[col] = features_df[col].astype(str)
+            
+            # Only encode columns that exist in the dataframe
+            existing_categorical_features = [col for col in categorical_features if col in features_df.columns]
+            
+            for col in existing_categorical_features:
+                features_df[col] = features_df[col].astype(str)
             
             # One-hot encode categorical features (need to match training columns)
-            features_encoded = pd.get_dummies(features_df, columns=categorical_features, prefix=categorical_features)
+            if existing_categorical_features:
+                features_encoded = pd.get_dummies(features_df, columns=existing_categorical_features, prefix=existing_categorical_features)
+            else:
+                features_encoded = features_df.copy()
+                
             logger.info(f"After encoding: {features_encoded.shape[1]} structured features")
             
             # Add missing columns that were present during training
             missing_columns = []
-            for feature_name in self.feature_names:
-                if feature_name.startswith('tfidf_'):
-                    continue  # Skip TF-IDF features
+            structured_feature_names = [col for col in self.feature_names if not col.startswith('tfidf_')]
+            
+            for feature_name in structured_feature_names:
                 if feature_name not in features_encoded.columns:
                     features_encoded[feature_name] = 0
                     missing_columns.append(feature_name)
@@ -519,8 +526,7 @@ class MLCategoryPredictor:
             logger.info(f"Added {len(missing_columns)} missing columns")
             
             # Reorder columns to match training order
-            structured_feature_names = [col for col in self.feature_names if not col.startswith('tfidf_')]
-            features_encoded = features_encoded[structured_feature_names]
+            features_encoded = features_encoded.reindex(columns=structured_feature_names, fill_value=0)
             logger.info(f"Reordered to {len(structured_feature_names)} structured features")
             
             # Get TF-IDF features
