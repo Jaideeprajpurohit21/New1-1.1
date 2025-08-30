@@ -526,8 +526,6 @@ class MLCategoryPredictor:
             logger.info(f"Added {len(missing_columns)} missing columns")
             
             # Reorder columns to match training order (avoiding duplicates)
-            structured_feature_names = [col for col in self.feature_names if not col.startswith('tfidf_')]
-            
             # Remove duplicates from feature names and ensure no duplicate columns
             structured_feature_names = list(dict.fromkeys(structured_feature_names))  # Remove duplicates
             
