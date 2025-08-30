@@ -137,10 +137,11 @@ const LuminaApp = () => {
     }
   }, []);
 
-  // Show notification
+  // Show notification with longer duration for uploads
   const showNotification = (message, type = 'info') => {
     setNotification({ message, type });
-    setTimeout(() => setNotification(null), 5000);
+    const duration = type === 'success' ? 8000 : 5000; // Longer for success messages
+    setTimeout(() => setNotification(null), duration);
   };
 
   // Initialize data
