@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Upload</title>
+</head>
+<body>
+    <h1>Test Upload Functionality</h1>
+    <form id="uploadForm">
+        <input type="file" id="fileInput" accept="image/*,application/pdf">
+        <select id="categorySelect">
+            <option value="Auto-Detect">Auto-Detect</option>
+            <option value="Groceries">Groceries</option>
+        </select>
+        <button type="submit">Upload</button>
+    </form>
+    
+    <div id="result"></div>
+    
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('fileInput');
+            const categorySelect = document.getElementById('categorySelect');
+            const resultDiv = document.getElementById('result');
+            
+            if (!fileInput.files[0]) {
+                resultDiv.innerHTML = 'Please select a file';
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('category', categorySelect.value);
+            
+            try {
+                resultDiv.innerHTML = 'Uploading...';
+                
+                const response = await fetch('http://localhost:8001/api/receipts/upload', {
+                    method: 'POST',
+                    body: formData,
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = `
+                        <h3>Success!</h3>
+                        <p>ID: ${data.id}</p>
+                        <p>Merchant: ${data.merchant_name || 'N/A'}</p>
+                        <p>Category: ${data.category}</p>
+                        <p>Status: ${data.processing_status}</p>
+                    `;
+                } else {
+                    const errorText = await response.text();
+                    resultDiv.innerHTML = `
+                        <h3>Error!</h3>
+                        <p>Status: ${response.status}</p>
+                        <p>Error: ${errorText}</p>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h3>Network Error!</h3>
+                    <p>${error.message}</p>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
