@@ -928,6 +928,33 @@ async def upload_receipt(
             if category == "Auto-Detect":
                 final_category = ocr_result.get('suggested_category', 'Uncategorized')
             
+            # Ensure total_amount is properly formatted as string
+            total_amount = ocr_result.get('total_amount')
+            formatted_amount = None
+            if total_amount is not None:
+                if isinstance(total_amount, (int, float)):
+                    formatted_amount = f"${total_amount:.2f}"
+                else:
+                    formatted_amount = str(total_amount)
+            
+            # Format item amounts as well
+            formatted_items = []
+            for item in ocr_result.get('items', []):
+                item_amount = item.get('amount')
+                formatted_item_amount = None
+                if item_amount is not None:
+                    if isinstance(item_amount, (int, float)):
+                        formatted_item_amount = f"${item_amount:.2f}"
+                    else:
+                        formatted_item_amount = str(item_amount)
+                
+                formatted_items.append({
+                    "id": str(uuid.uuid4()),
+                    "description": item.get('description', ''),
+                    "amount": formatted_item_amount,
+                    "confidence": item.get('confidence', 0.0)
+                })
+            
             update_data = {
                 "processing_status": "completed",
                 "category": final_category,
@@ -935,17 +962,11 @@ async def upload_receipt(
                 "searchable_text": ocr_result.get('searchable_text', ''),
                 "merchant_name": ocr_result.get('merchant_name'),
                 "receipt_date": ocr_result.get('receipt_date'),
-                "total_amount": ocr_result.get('total_amount'),
+                "total_amount": formatted_amount,
                 "confidence_score": ocr_result.get('confidence_score', 0.0),
-                "items": [
-                    {
-                        "id": str(uuid.uuid4()),
-                        "description": item.get('description', ''),
-                        "amount": item.get('amount'),
-                        "confidence": item.get('confidence', 0.0)
-                    }
-                    for item in ocr_result.get('items', [])
-                ]
+                "items": formatted_items,
+                "category_confidence": ocr_result.get('category_confidence', 0.0),
+                "categorization_method": ocr_result.get('categorization_method', 'unknown')
             }
         else:
             update_data = {
