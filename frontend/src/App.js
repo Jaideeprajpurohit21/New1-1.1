@@ -149,10 +149,13 @@ const LuminaApp = () => {
     fetchCategories();
   }, [fetchCategories]); // Remove fetchReceipts from dependencies since it's handled by search effect
 
-  // Upload receipt
+  // Upload receipt with enhanced feedback
   const handleReceiptUpload = async (file, category = 'Uncategorized') => {
     try {
       setUploadingReceipt(true);
+      
+      // Show immediate feedback
+      showNotification('Uploading receipt...', 'info');
       
       const formData = new FormData();
       formData.append('file', file);
@@ -164,13 +167,29 @@ const LuminaApp = () => {
         },
       });
 
-      showNotification('Receipt uploaded and processed successfully!', 'success');
+      // Show success with details
+      const uploadedReceipt = response.data;
+      const successMessage = `✅ Receipt uploaded successfully! ${uploadedReceipt.merchant_name ? `Detected: ${uploadedReceipt.merchant_name}` : ''} → ${uploadedReceipt.category || 'Processing...'}`;
+      showNotification(successMessage, 'success');
+      
+      // Refresh data
       fetchReceipts();
       fetchCategories();
       
     } catch (error) {
       console.error('Error uploading receipt:', error);
-      showNotification('Failed to upload receipt. Please try again.', 'error');
+      
+      // More detailed error message
+      let errorMessage = 'Failed to upload receipt. ';
+      if (error.response) {
+        errorMessage += `Error ${error.response.status}: ${error.response.data?.detail || 'Please try again.'}`;
+      } else if (error.request) {
+        errorMessage += 'Network error. Please check your connection.';
+      } else {
+        errorMessage += 'Please try again later.';
+      }
+      
+      showNotification(errorMessage, 'error');
     } finally {
       setUploadingReceipt(false);
     }
