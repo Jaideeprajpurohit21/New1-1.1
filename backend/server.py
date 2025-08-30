@@ -99,6 +99,8 @@ class Receipt(BaseModel):
     raw_text: str = ""
     processing_status: str = "pending"  # pending, processing, completed, failed
     confidence_score: Optional[float] = None
+    category_confidence: Optional[float] = None  # ML category prediction confidence
+    categorization_method: Optional[str] = None  # Method used for categorization
 
 class ReceiptCreate(BaseModel):
     filename: str
