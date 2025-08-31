@@ -500,6 +500,8 @@ const LuminaApp = () => {
                       </div>
                     ))}
                   </div>
+                ) : error ? (
+                  <ErrorState error={error} onRetry={() => fetchReceipts()} loading={loading} />
                 ) : receipts.length === 0 ? (
                   <EmptyState onUpload={handleReceiptUpload} uploading={uploadingReceipt} />
                 ) : (
