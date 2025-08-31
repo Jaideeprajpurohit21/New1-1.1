@@ -429,7 +429,9 @@ const LuminaApp = () => {
                 <CardDescription>Your latest uploaded receipts</CardDescription>
               </CardHeader>
               <CardContent>
-                {receipts.length === 0 ? (
+                {error ? (
+                  <ErrorState error={error} onRetry={() => fetchReceipts()} loading={loading} />
+                ) : receipts.length === 0 ? (
                   <EmptyState onUpload={handleReceiptUpload} uploading={uploadingReceipt} />
                 ) : (
                   <div className="space-y-4">
