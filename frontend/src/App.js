@@ -189,7 +189,7 @@ const LuminaApp = () => {
   // Update receipt category
   const updateReceiptCategory = async (receiptId, newCategory) => {
     try {
-      await axios.put(`${API}/receipts/${receiptId}/category`, {
+      await api.put(`/receipts/${receiptId}/category`, {
         category: newCategory
       });
       
@@ -199,7 +199,7 @@ const LuminaApp = () => {
       
     } catch (error) {
       console.error('Error updating category:', error);
-      showNotification('Failed to update category', 'error');
+      showNotification(getErrorMessage(error), 'error');
     }
   };
 
