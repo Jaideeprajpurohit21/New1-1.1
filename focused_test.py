@@ -11,7 +11,7 @@ from datetime import datetime
 
 class LuminaFocusedTest:
     def __init__(self):
-        self.base_url = "https://expensify-ai.preview.emergentagent.com"
+        self.base_url = "https://expense-ai-5.preview.emergentagent.com"
         self.api_url = f"{self.base_url}/api"
         self.tests_run = 0
         self.tests_passed = 0
