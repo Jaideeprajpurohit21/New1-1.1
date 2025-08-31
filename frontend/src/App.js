@@ -183,11 +183,29 @@ const LuminaApp = () => {
     setTimeout(() => setNotification(null), duration);
   };
 
-  // Initialize data
+  // Initialize app with API health check
   useEffect(() => {
-    fetchReceipts();
-    fetchCategories();
-  }, [fetchCategories]); // Remove fetchReceipts from dependencies since it's handled by search effect
+    const initializeApp = async () => {
+      console.log('🚀 Initializing Lumina App...');
+      console.log('🔗 API Base URL:', API_BASE_URL);
+      
+      // Perform health check first
+      const healthResult = await healthCheck();
+      
+      if (healthResult.success) {
+        console.log('✅ API Health Check passed:', healthResult.message);
+        // Load data
+        await fetchReceipts();
+        await fetchCategories();
+      } else {
+        console.error('❌ API Health Check failed:', healthResult.error);
+        setError(`Unable to connect to server: ${healthResult.error}`);
+        showNotification(`Unable to connect to server. Please try refreshing the page.`, 'error');
+      }
+    };
+    
+    initializeApp();
+  }, []); // Empty dependency array - run once on mount
 
   // Upload receipt with enhanced feedback
   const handleReceiptUpload = async (file, category = 'Uncategorized') => {
