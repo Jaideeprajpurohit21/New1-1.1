@@ -132,7 +132,7 @@ const LuminaApp = () => {
   // Fetch categories from API
   const fetchCategories = useCallback(async () => {
     try {
-      const response = await axios.get(`${API}/categories`);
+      const response = await api.get('/categories');
       setCategories(response.data.categories);
     } catch (error) {
       console.error('Error fetching categories:', error);
