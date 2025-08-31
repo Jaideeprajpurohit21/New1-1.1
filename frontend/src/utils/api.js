@@ -12,6 +12,11 @@ import axios from 'axios';
  * Automatically detect the correct backend URL based on environment
  */
 const detectBackendURL = () => {
+  // HARDCODED FIX: Force the correct preview URL
+  const previewUrl = 'https://expense-ai-5.preview.emergentagent.com';
+  console.log(`🔧 FORCING preview URL: ${previewUrl}`);
+  return previewUrl;
+  
   // Check if we have an explicit backend URL from environment
   if (process.env.REACT_APP_BACKEND_URL) {
     console.log(`🔧 Using environment URL: ${process.env.REACT_APP_BACKEND_URL}`);
