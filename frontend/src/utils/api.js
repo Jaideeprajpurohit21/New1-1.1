@@ -12,15 +12,27 @@ import axios from 'axios';
  * Automatically detect the correct backend URL based on environment
  */
 const detectBackendURL = () => {
+  // FORCE DEBUG: Print all environment variables
+  console.log('🔍 Environment Debug:');
+  console.log('  NODE_ENV:', process.env.NODE_ENV);
+  console.log('  REACT_APP_BACKEND_URL:', process.env.REACT_APP_BACKEND_URL);
+  console.log('  All env vars:', Object.keys(process.env).filter(key => key.startsWith('REACT_APP')));
+  
   // Check if we have an explicit backend URL from environment
   if (process.env.REACT_APP_BACKEND_URL) {
     console.log(`🔧 Using environment URL: ${process.env.REACT_APP_BACKEND_URL}`);
     return process.env.REACT_APP_BACKEND_URL;
   }
 
-  // Auto-detect based on current hostname
+  // FALLBACK: Force preview URL if environment variable isn't working
   const hostname = window.location.hostname;
-  console.log(`🔍 Detecting backend URL for hostname: ${hostname}`);
+  console.log(`🔍 Hostname detected: ${hostname}`);
+  
+  if (hostname.includes('expense-ai-5.preview.emergentagent.com')) {
+    const forcedUrl = 'https://expense-ai-5.preview.emergentagent.com';
+    console.log(`🚨 FORCED URL (env var failed): ${forcedUrl}`);
+    return forcedUrl;
+  }
   
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
     // Local development
