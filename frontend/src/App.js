@@ -20,6 +20,9 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import axios from 'axios';
 import './App.css';
 
+// Import new API utilities
+import { api, healthCheck, getErrorMessage, API_BASE_URL } from './utils/api';
+
 // Import Shadcn components
 import { Button } from './components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './components/ui/card';
