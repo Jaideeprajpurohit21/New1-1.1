@@ -241,7 +241,7 @@ const LuminaApp = () => {
 
   // View original receipt file
   const viewOriginalReceipt = (receiptId, filename) => {
-    const fileUrl = `${BACKEND_URL}/api/receipts/${receiptId}/file`;
+    const fileUrl = `${API_BASE_URL}/receipts/${receiptId}/file`;
     window.open(fileUrl, '_blank');
   };
 
