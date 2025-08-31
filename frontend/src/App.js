@@ -219,7 +219,7 @@ const LuminaApp = () => {
   // Enhanced CSV export with filters
   const exportReceipts = async (filters = null) => {
     try {
-      const response = await axios.post(`${API}/receipts/export/csv`, filters || {}, {
+      const response = await api.post('/receipts/export/csv', filters || {}, {
         responseType: 'blob'
       });
       
@@ -235,7 +235,7 @@ const LuminaApp = () => {
       setShowExportDialog(false);
     } catch (error) {
       console.error('Error exporting receipts:', error);
-      showNotification('Failed to export receipts', 'error');
+      showNotification(getErrorMessage(error), 'error');
     }
   };
 
