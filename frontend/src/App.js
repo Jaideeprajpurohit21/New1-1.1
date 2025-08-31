@@ -1350,4 +1350,39 @@ const EmptyState = ({ onUpload, uploading }) => (
   </div>
 );
 
+// Error State Component for failed API calls
+const ErrorState = ({ error, onRetry, loading }) => (
+  <div className="text-center py-12">
+    <AlertCircle className="mx-auto h-12 w-12 text-red-500 mb-4" />
+    <h3 className="text-lg font-medium text-slate-900 mb-2">Unable to Load Receipts</h3>
+    <p className="text-slate-600 mb-6 max-w-md mx-auto">
+      {error || 'There was a problem connecting to the server. Please try again.'}
+    </p>
+    <Button 
+      onClick={onRetry}
+      disabled={loading}
+      variant="outline"
+      className="mr-4"
+    >
+      {loading ? (
+        <>
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Retrying...
+        </>
+      ) : (
+        <>
+          <AlertCircle className="mr-2 h-4 w-4" />
+          Try Again
+        </>
+      )}
+    </Button>
+    <Button 
+      onClick={() => window.location.reload()} 
+      variant="ghost"
+    >
+      Refresh Page
+    </Button>
+  </div>
+);
+
 export default App;
