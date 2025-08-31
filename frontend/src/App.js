@@ -164,11 +164,7 @@ const LuminaApp = () => {
       formData.append('file', file);
       formData.append('category', category);
 
-      const response = await axios.post(`${API}/receipts/upload`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await api.upload('/receipts/upload', formData);
 
       // Show success with details
       const uploadedReceipt = response.data;
@@ -182,16 +178,8 @@ const LuminaApp = () => {
     } catch (error) {
       console.error('Error uploading receipt:', error);
       
-      // More detailed error message
-      let errorMessage = 'Failed to upload receipt. ';
-      if (error.response) {
-        errorMessage += `Error ${error.response.status}: ${error.response.data?.detail || 'Please try again.'}`;
-      } else if (error.request) {
-        errorMessage += 'Network error. Please check your connection.';
-      } else {
-        errorMessage += 'Please try again later.';
-      }
-      
+      // More detailed error message using the utility
+      const errorMessage = `Failed to upload receipt. ${getErrorMessage(error)}`;
       showNotification(errorMessage, 'error');
     } finally {
       setUploadingReceipt(false);
