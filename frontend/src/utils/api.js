@@ -14,21 +14,28 @@ import axios from 'axios';
 const detectBackendURL = () => {
   // Check if we have an explicit backend URL from environment
   if (process.env.REACT_APP_BACKEND_URL) {
+    console.log(`🔧 Using environment URL: ${process.env.REACT_APP_BACKEND_URL}`);
     return process.env.REACT_APP_BACKEND_URL;
   }
 
   // Auto-detect based on current hostname
   const hostname = window.location.hostname;
+  console.log(`🔍 Detecting backend URL for hostname: ${hostname}`);
   
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
     // Local development
+    console.log(`🏠 Local development detected`);
     return 'http://localhost:8001';
   } else if (hostname.includes('emergent.host') || hostname.includes('emergentagent.com')) {
-    // Production on Emergent platform
-    return `https://${hostname.replace('expensify-ai', 'expensify-ai-api')}`;
+    // Production on Emergent platform - fix hostname pattern matching
+    const backendUrl = `https://${hostname}`;
+    console.log(`🌐 Emergent platform detected, using: ${backendUrl}`);
+    return backendUrl;
   } else {
     // Fallback for custom domains
-    return `https://api.${hostname}`;
+    const backendUrl = `https://api.${hostname}`;
+    console.log(`🔗 Custom domain detected, using: ${backendUrl}`);
+    return backendUrl;
   }
 };
 
