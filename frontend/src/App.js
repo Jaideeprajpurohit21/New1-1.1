@@ -63,7 +63,8 @@ import {
   Image as FileImage,
   FileText as FilePdf,
   Bot,
-  Sparkles
+  Sparkles,
+  Loader2
 } from 'lucide-react';
 
 
