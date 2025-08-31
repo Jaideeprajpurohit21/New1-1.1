@@ -109,7 +109,7 @@ const LuminaApp = () => {
   const fetchReceipts = useCallback(async (search = '', category = '') => {
     try {
       setLoading(true);
-      let url = `${API}/receipts`;
+      let url = '/receipts';
       const params = new URLSearchParams();
       
       if (search) params.append('search', search);
@@ -119,11 +119,11 @@ const LuminaApp = () => {
         url += `?${params.toString()}`;
       }
       
-      const response = await axios.get(url);
+      const response = await api.get(url);
       setReceipts(response.data);
     } catch (error) {
       console.error('Error fetching receipts:', error);
-      showNotification('Failed to load receipts', 'error');
+      showNotification(getErrorMessage(error), 'error');
     } finally {
       setLoading(false);
     }
