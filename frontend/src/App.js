@@ -105,10 +105,12 @@ const LuminaApp = () => {
   const [selectedReceipt, setSelectedReceipt] = useState(null);
   const [showReceiptDetail, setShowReceiptDetail] = useState(false);
 
-  // Fetch receipts from API with enhanced search
+  // Fetch receipts from API with enhanced error handling and retry logic
   const fetchReceipts = useCallback(async (search = '', category = '') => {
     try {
       setLoading(true);
+      setError(null); // Clear any previous errors
+      
       let url = '/receipts';
       const params = new URLSearchParams();
       
@@ -119,15 +121,49 @@ const LuminaApp = () => {
         url += `?${params.toString()}`;
       }
       
+      console.log(`📥 Fetching receipts from: ${API_BASE_URL}${url}`);
+      
+      // Use the retry-enabled API client
       const response = await api.get(url);
-      setReceipts(response.data);
-    } catch (error) {
-      console.error('Error fetching receipts:', error);
-      showNotification(getErrorMessage(error), 'error');
+      
+      if (response.data && Array.isArray(response.data)) {
+        setReceipts(response.data);
+        console.log(`✅ Successfully loaded ${response.data.length} receipts`);
+        
+        // Show success message only if recovering from an error
+        if (error) {
+          showNotification('✅ Receipts loaded successfully!', 'success');
+        }
+      } else {
+        // Handle unexpected response format
+        console.warn('⚠️ Unexpected response format:', response.data);
+        setReceipts([]);
+        showNotification('⚠️ Unexpected data format received from server', 'warning');
+      }
+      
+    } catch (err) {
+      console.error('❌ Error fetching receipts:', err);
+      
+      // Set user-friendly error message
+      if (err.code === 'NETWORK_ERROR' || err.message.includes('Network Error')) {
+        setError('Unable to connect to server. Please check your internet connection and try again.');
+      } else if (err.response?.status === 500) {
+        setError('Server is temporarily unavailable. Our team has been notified. Please try again in a few minutes.');
+      } else if (err.response?.status === 404) {
+        setError('Receipts service not found. Please contact support if this persists.');
+      } else {
+        setError(`Failed to load receipts: ${getErrorMessage(err)}`);
+      }
+      
+      // Don't show receipts if there's an error
+      setReceipts([]);
+      
+      // Show error notification
+      showNotification(`Failed to load receipts. ${getErrorMessage(err)}`, 'error');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [error]); // Include error in dependencies to track recovery
 
   // Fetch categories from API
   const fetchCategories = useCallback(async () => {
