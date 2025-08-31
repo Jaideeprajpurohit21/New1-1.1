@@ -206,13 +206,13 @@ const LuminaApp = () => {
   // Delete receipt
   const deleteReceipt = async (receiptId) => {
     try {
-      await axios.delete(`${API}/receipts/${receiptId}`);
+      await api.delete(`/receipts/${receiptId}`);
       showNotification('Receipt deleted successfully!', 'success');
       fetchReceipts();
       fetchCategories();
     } catch (error) {
       console.error('Error deleting receipt:', error);
-      showNotification('Failed to delete receipt', 'error');
+      showNotification(getErrorMessage(error), 'error');
     }
   };
 
