@@ -92,6 +92,7 @@ const LuminaApp = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('dashboard');
   const [notification, setNotification] = useState(null);
+  const [error, setError] = useState(null); // Add error state for better UX
   
   // Enhanced export filters
   const [exportFilters, setExportFilters] = useState({
