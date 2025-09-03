@@ -35,6 +35,8 @@ def extract_amount(text: str) -> Optional[float]:
     # Transaction keywords that indicate the primary transaction amount
     # Ordered by priority - more specific keywords first
     transaction_keywords = [
+        'total',
+        'amount',
         'purchase',
         'spent', 
         'charged',
