@@ -135,6 +135,8 @@ def extract_amount(text: str) -> Optional[float]:
                     r'[₹$€£¥¢]\s*\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?',
                     # Keyword-amount patterns (e.g., "payment of 1,500")
                     r'(?:' + re.escape(keyword) + r')\s+(?:of\s+)?\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?',
+                    # Keyword: amount patterns (e.g., "Amount: 25.50", "Total: 123.45")
+                    r'(?:' + re.escape(keyword) + r')[:]\s*\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?',
                 ]
                 
                 for pattern in currency_patterns:
