@@ -292,34 +292,59 @@ class ReceiptOCRProcessor:
             combined_text = ""
             
             for image_path in image_paths:
-                # Run OCR processing in thread pool to avoid blocking
-                # Optimize OCR with better parameters for speed and accuracy
-                loop = asyncio.get_event_loop()
-                
-                # Enhanced OCR processing with optimized parameters
-                results = await loop.run_in_executor(
-                    None, 
-                    lambda: self.reader.readtext(
-                        image_path,
-                        detail=1,                    # Return bounding box details
-                        paragraph=False,             # Don't group into paragraphs for better line detection
-                        width_ths=0.7,              # Adjusted for better text line detection
-                        height_ths=0.7,             # Adjusted for better text line detection
-                        mag_ratio=1.5,              # Increase magnification for better accuracy
-                        slope_ths=0.1,              # Better slope detection for rotated text
-                        ycenter_ths=0.5,            # Better vertical center detection
-                        add_margin=0.1              # Add margin for better text capture
+                try:
+                    # Validate image file before processing
+                    import cv2
+                    import numpy as np
+                    
+                    # Read image to check if it's valid
+                    test_image = cv2.imread(image_path)
+                    if test_image is None:
+                        logger.error(f"Failed to read image file: {image_path}")
+                        continue
+                    
+                    # Check image dimensions
+                    height, width = test_image.shape[:2]
+                    if height < 10 or width < 10:
+                        logger.error(f"Image too small: {width}x{height}")
+                        continue
+                    
+                    logger.info(f"Processing image: {image_path} ({width}x{height})")
+                    
+                    # Run OCR processing in thread pool to avoid blocking
+                    # Optimize OCR with better parameters for speed and accuracy
+                    loop = asyncio.get_event_loop()
+                    
+                    # Enhanced OCR processing with optimized parameters
+                    results = await loop.run_in_executor(
+                        None, 
+                        lambda: self.reader.readtext(
+                            image_path,
+                            detail=1,                    # Return bounding box details
+                            paragraph=False,             # Don't group into paragraphs for better line detection
+                            width_ths=0.7,              # Adjusted for better text line detection
+                            height_ths=0.7,             # Adjusted for better text line detection
+                            mag_ratio=1.5,              # Increase magnification for better accuracy
+                            slope_ths=0.1,              # Better slope detection for rotated text
+                            ycenter_ths=0.5,            # Better vertical center detection
+                            add_margin=0.1              # Add margin for better text capture
+                        )
                     )
-                )
-                
-                all_results.extend(results)
-                
-                # Clean up temporary PDF conversion files
-                if is_pdf and image_path != file_path:
-                    try:
-                        os.remove(image_path)
-                    except:
-                        pass
+                    
+                    all_results.extend(results)
+                    logger.info(f"Successfully processed image {image_path}: found {len(results)} text elements")
+                    
+                except Exception as image_error:
+                    logger.error(f"Error processing image {image_path}: {str(image_error)}")
+                    # Continue processing other images if this one fails
+                    continue
+                finally:
+                    # Clean up temporary PDF conversion files
+                    if is_pdf and image_path != file_path:
+                        try:
+                            os.remove(image_path)
+                        except:
+                            pass
             
             # Extract full text with improved confidence filtering
             # Use lower confidence threshold for better text capture, but validate in parsing
