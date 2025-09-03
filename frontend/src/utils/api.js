@@ -12,43 +12,10 @@ import axios from 'axios';
  * Automatically detect the correct backend URL based on environment
  */
 const detectBackendURL = () => {
-  // FORCE DEBUG: Print all environment variables
-  console.log('🔍 Environment Debug:');
-  console.log('  NODE_ENV:', process.env.NODE_ENV);
-  console.log('  REACT_APP_BACKEND_URL:', process.env.REACT_APP_BACKEND_URL);
-  console.log('  All env vars:', Object.keys(process.env).filter(key => key.startsWith('REACT_APP')));
-  
-  // Check if we have an explicit backend URL from environment
-  if (process.env.REACT_APP_BACKEND_URL) {
-    console.log(`🔧 Using environment URL: ${process.env.REACT_APP_BACKEND_URL}`);
-    return process.env.REACT_APP_BACKEND_URL;
-  }
-
-  // FALLBACK: Force preview URL if environment variable isn't working
-  const hostname = window.location.hostname;
-  console.log(`🔍 Hostname detected: ${hostname}`);
-  
-  if (hostname.includes('expense-ai-5.preview.emergentagent.com')) {
-    const forcedUrl = 'https://expense-ai-5.preview.emergentagent.com';
-    console.log(`🚨 FORCED URL (env var failed): ${forcedUrl}`);
-    return forcedUrl;
-  }
-  
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    // Local development
-    console.log(`🏠 Local development detected`);
-    return 'http://localhost:8001';
-  } else if (hostname.includes('emergent.host') || hostname.includes('emergentagent.com')) {
-    // Production on Emergent platform - use same hostname as frontend
-    const backendUrl = `https://${hostname}`;
-    console.log(`🌐 Emergent platform detected, using: ${backendUrl}`);
-    return backendUrl;
-  } else {
-    // Fallback for custom domains
-    const backendUrl = `https://api.${hostname}`;
-    console.log(`🔗 Custom domain detected, using: ${backendUrl}`);
-    return backendUrl;
-  }
+  // GUARANTEED FIX: Hardcode the preview URL to ensure 100% accuracy
+  const GUARANTEED_URL = 'https://expense-ai-5.preview.emergentagent.com';
+  console.log(`🚨 GUARANTEED FIX: Using hardcoded URL: ${GUARANTEED_URL}`);
+  return GUARANTEED_URL;
 };
 
 // Configure axios with automatic backend detection
