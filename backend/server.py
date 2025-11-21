@@ -62,6 +62,13 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
+# Import and configure authentication
+from auth import set_database, get_current_user, get_current_user_optional, User
+from auth_routes import auth_router
+
+# Set database for auth module
+set_database(db)
+
 # Create the main app without a prefix
 app = FastAPI(title="Lumina - Enhanced Receipt OCR API", version="2.0.0")
 
