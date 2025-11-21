@@ -1100,16 +1100,16 @@ async def update_receipt_category(receipt_id: str, category_update: CategoryUpda
         raise HTTPException(status_code=500, detail="Failed to update category")
 
 @api_router.delete("/receipts/{receipt_id}")
-async def delete_receipt(receipt_id: str):
+async def delete_receipt(receipt_id: str, current_user: User = Depends(get_current_user)):
     """Delete a receipt and its associated file"""
     try:
         # Get receipt to find file path
-        receipt = await db.receipts.find_one({"id": receipt_id})
+        receipt = await db.receipts.find_one({"id": receipt_id, "user_id": current_user.id})
         if not receipt:
             raise HTTPException(status_code=404, detail="Receipt not found")
         
         # Delete from database
-        result = await db.receipts.delete_one({"id": receipt_id})
+        result = await db.receipts.delete_one({"id": receipt_id, "user_id": current_user.id})
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Receipt not found")
         
