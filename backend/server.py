@@ -1368,11 +1368,124 @@ app.add_middleware(LoggingMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.frontend_origin, "http://localhost:3000"],  # Allow frontend origin and local dev
+    allow_origins=settings.allowed_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
+
+# Global exception handlers
+@app.exception_handler(500)
+async def internal_server_error_handler(request: Request, exc: Exception):
+    """Handle internal server errors"""
+    error_id = str(uuid.uuid4())
+    
+    log_error(logger, exc, {
+        "error_id": error_id,
+        "method": request.method,
+        "url": str(request.url),
+        "user_agent": request.headers.get("user-agent", "Unknown")
+    })
+    
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": "Internal server error",
+            "message": "An unexpected error occurred. Please try again later.",
+            "error_id": error_id,
+            "timestamp": datetime.utcnow().isoformat() + "Z"
+        }
+    )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Handle request validation errors"""
+    logger.warning(
+        f"Validation error: {request.method} {request.url.path}",
+        extra={
+            "errors": exc.errors(),
+            "body": str(exc.body) if hasattr(exc, 'body') else None
+        }
+    )
+    
+    return JSONResponse(
+        status_code=422,
+        content={
+            "error": "Validation error",
+            "message": "Invalid request data",
+            "details": exc.errors(),
+            "timestamp": datetime.utcnow().isoformat() + "Z"
+        }
+    )
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler_custom(request: Request, exc: HTTPException):
+    """Handle HTTP exceptions with logging"""
+    if exc.status_code >= 500:
+        log_error(logger, exc, {
+            "method": request.method,
+            "url": str(request.url),
+            "status_code": exc.status_code
+        })
+    else:
+        logger.info(
+            f"HTTP exception: {request.method} {request.url.path} - {exc.status_code}",
+            extra={
+                "status_code": exc.status_code,
+                "detail": exc.detail
+            }
+        )
+    
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "error": f"HTTP {exc.status_code}",
+            "message": exc.detail if isinstance(exc.detail, str) else str(exc.detail),
+            "timestamp": datetime.utcnow().isoformat() + "Z"
+        }
+    )
+
+# Health check endpoint
+@api_router.get("/health")
+async def health_check():
+    """
+    Health check endpoint for monitoring and load balancers
+    """
+    try:
+        # Test database connection
+        await db.command("ping")
+        db_status = "healthy"
+    except Exception as e:
+        logger.error(f"Database health check failed: {e}")
+        db_status = "unhealthy"
+    
+    # Check file system
+    uploads_healthy = settings.uploads_dir.exists() and os.access(settings.uploads_dir, os.W_OK)
+    
+    # Overall status
+    status = "ok" if db_status == "healthy" and uploads_healthy else "degraded"
+    
+    health_data = {
+        "status": status,
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "version": "2.0.0",
+        "environment": settings.environment,
+        "checks": {
+            "database": db_status,
+            "file_system": "healthy" if uploads_healthy else "unhealthy",
+        }
+    }
+    
+    # Add additional info for development
+    if settings.debug:
+        health_data["debug_info"] = {
+            "uploads_dir": str(settings.uploads_dir),
+            "db_name": settings.db_name,
+            "rate_limiting": settings.rate_limit_enabled
+        }
+    
+    status_code = 200 if status == "ok" else 503
+    return JSONResponse(status_code=status_code, content=health_data)
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
