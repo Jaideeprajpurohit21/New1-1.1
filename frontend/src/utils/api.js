@@ -9,13 +9,26 @@
 import axios from 'axios';
 
 /**
- * Automatically detect the correct backend URL based on environment
+ * Get backend URL from environment variables
  */
-const detectBackendURL = () => {
-  // GUARANTEED FIX: Hardcode the preview URL to ensure 100% accuracy
-  const GUARANTEED_URL = 'https://expense-ai-5.preview.emergentagent.com';
-  console.log(`🚨 GUARANTEED FIX: Using hardcoded URL: ${GUARANTEED_URL}`);
-  return GUARANTEED_URL;
+const getBackendURL = () => {
+  // Use environment variable (prioritize REACT_APP_BACKEND_URL)
+  const envUrl = process.env.REACT_APP_BACKEND_URL;
+  
+  if (envUrl) {
+    console.log(`🔧 Using environment URL: ${envUrl}`);
+    return envUrl;
+  }
+
+  // Fallback for development
+  if (process.env.NODE_ENV === 'development') {
+    const devUrl = 'http://localhost:8000';
+    console.log(`🏠 Using development fallback: ${devUrl}`);
+    return devUrl;
+  }
+
+  // Production fallback (should not reach here if env vars are set correctly)
+  throw new Error('REACT_APP_BACKEND_URL environment variable is required for production');
 };
 
 // Configure axios with automatic backend detection
