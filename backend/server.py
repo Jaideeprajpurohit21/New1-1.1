@@ -57,10 +57,12 @@ except ImportError:
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
+# Import production configuration
+from config import settings
+
 # MongoDB connection
-mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+client = AsyncIOMotorClient(settings.mongodb_uri)
+db = client[settings.db_name]
 
 # Import and configure authentication
 from auth import set_database, get_current_user, get_current_user_optional, User
