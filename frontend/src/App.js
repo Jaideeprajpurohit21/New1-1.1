@@ -124,6 +124,10 @@ const LuminaApp = () => {
   const [notification, setNotification] = useState(null);
   const [error, setError] = useState(null); // Add error state for better UX
   
+  // Billing and upgrade states
+  const [billingInfo, setBillingInfo] = useState(null);
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  
   // Enhanced export filters
   const [exportFilters, setExportFilters] = useState({
     startDate: null,
