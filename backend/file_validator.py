@@ -125,6 +125,17 @@ class FileValidator:
         """
         Validate PDF file integrity
         """
+        if not FITZ_AVAILABLE:
+            # Basic validation without PyMuPDF
+            if not file_content.startswith(b'%PDF-'):
+                return False, "Invalid PDF signature"
+            
+            # Basic size check
+            if len(file_content) > 50 * 1024 * 1024:  # 50MB limit for PDFs
+                return False, "PDF file too large"
+            
+            return True, "Basic PDF validation passed (PyMuPDF not available)"
+        
         try:
             # Try to open PDF with PyMuPDF
             pdf_doc = fitz.open(stream=file_content, filetype="pdf")
@@ -141,7 +152,11 @@ class FileValidator:
                 return False, f"PDF has too many pages: {page_count} (max 50)"
             
             # Try to access first page to ensure it's readable
-            first_page = pdf_doc[0]
+            try:
+                first_page = pdf_doc[0]
+            except Exception as page_error:
+                pdf_doc.close()
+                return False, f"Cannot read PDF pages: {str(page_error)}"
             
             pdf_doc.close()
             
