@@ -1363,6 +1363,9 @@ if ML_API_AVAILABLE:
 else:
     logger.warning("ML API endpoints not available")
 
+# Add custom middleware
+app.add_middleware(LoggingMiddleware)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[settings.frontend_origin, "http://localhost:3000"],  # Allow frontend origin and local dev
