@@ -7,15 +7,34 @@ Copyright (c) 2024 Jaideep Singh Rajpurohit. All rights reserved.
 PROPRIETARY SOFTWARE - UNAUTHORIZED USE PROHIBITED
 """
 
-import magic
 import os
 from pathlib import Path
 from typing import Tuple, Optional
 from fastapi import UploadFile, HTTPException, status
-from PIL import Image
-import fitz  # PyMuPDF for PDF validation
 from config import settings
 from logging_config import get_logger
+
+# Optional imports with graceful fallbacks
+try:
+    import magic
+    MAGIC_AVAILABLE = True
+except ImportError:
+    MAGIC_AVAILABLE = False
+    print("Warning: python-magic not available - using fallback file type detection")
+
+try:
+    from PIL import Image
+    PIL_AVAILABLE = True
+except ImportError:
+    PIL_AVAILABLE = False
+    print("Warning: PIL not available - image validation will be limited")
+
+try:
+    import fitz  # PyMuPDF for PDF validation
+    FITZ_AVAILABLE = True
+except ImportError:
+    FITZ_AVAILABLE = False
+    print("Warning: PyMuPDF not available - PDF validation will be limited")
 
 logger = get_logger("file_validator")
 
