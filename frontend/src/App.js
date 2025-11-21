@@ -26,6 +26,11 @@ import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import UserDropdown from './components/UserDropdown';
 
+// Import billing components
+import BillingPage from './pages/BillingPage';
+import BillingSuccessPage from './pages/BillingSuccessPage';
+import UpgradePrompt from './components/UpgradePrompt';
+
 // Import new API utilities
 import { api, healthCheck, getErrorMessage, API_BASE_URL } from './utils/api';
 
