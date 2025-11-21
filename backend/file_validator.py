@@ -70,13 +70,13 @@ class FileValidator:
         """
         Detect MIME type from file content using magic numbers
         """
-        try:
-            # Try python-magic first (more accurate)
-            if hasattr(magic, 'from_buffer'):
+        if MAGIC_AVAILABLE:
+            try:
+                # Try python-magic first (more accurate)
                 mime_type = magic.from_buffer(file_content, mime=True)
                 return mime_type
-        except Exception as e:
-            logger.debug(f"Magic library detection failed: {e}")
+            except Exception as e:
+                logger.debug(f"Magic library detection failed: {e}")
         
         # Fallback to signature-based detection
         for signature, mime_type in self.FILE_SIGNATURES.items():
