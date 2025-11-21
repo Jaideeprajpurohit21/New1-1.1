@@ -1,21 +1,45 @@
-# ⚠️ PROPRIETARY SOFTWARE - UNAUTHORIZED USE PROHIBITED ⚠️
+# Lumina - AI-Powered Receipt Management System
 
-# LUMINA - AI-Powered Receipt Management System
+![Lumina Logo](https://via.placeholder.com/800x200/4F46E5/FFFFFF?text=LUMINA+-+AI-POWERED+RECEIPT+MANAGEMENT)
 
-**© 2024 Jaideep Singh Rajpurohit. All Rights Reserved.**
+Lumina is a sophisticated SaaS application that transforms receipts into categorized, accounting-ready data using advanced AI and machine learning technologies.
 
----
+## 🚀 Features
 
-## 🚨 PROPRIETARY SOFTWARE NOTICE
+- **AI-Powered OCR**: Extract text from receipts with high accuracy using EasyOCR
+- **Smart Categorization**: ML-powered automatic expense categorization 
+- **Multi-User Support**: Full authentication system with JWT and OAuth
+- **Receipt Management**: Upload, view, edit, and organize receipts
+- **Export Functionality**: Export data to CSV for accounting software
+- **Search & Filter**: Advanced search and filtering capabilities
+- **Mobile-Friendly**: Responsive design for all devices
 
-**THIS SOFTWARE IS PROPRIETARY AND CONFIDENTIAL**
+## 🏗 Architecture
 
-- This software contains trade secrets and proprietary information of Jaideep Singh Rajpurohit
-- Unauthorized copying, distribution, or use is strictly prohibited
-- All rights reserved under copyright laws and international treaties
-- Violation of these terms may result in severe civil and criminal penalties
+```
+Lumina/
+├── backend/                 # FastAPI backend
+│   ├── server.py           # Main application server
+│   ├── auth.py            # Authentication module
+│   ├── auth_routes.py     # Auth API endpoints
+│   ├── config.py          # Configuration management
+│   ├── requirements.txt   # Python dependencies
+│   └── Dockerfile        # Backend containerization
+├── frontend/              # React frontend
+│   ├── src/              # Source code
+│   ├── package.json      # Node.js dependencies
+│   └── public/           # Static assets
+└── docs/                 # Documentation
+```
 
-**⚠️ WARNING: This software is for authorized users only. Unauthorized access or use of this system is prohibited and may be subject to criminal and civil prosecution under applicable laws.**
+## 📋 Prerequisites
+
+Before deploying Lumina, ensure you have:
+
+- MongoDB Atlas account (free tier available)
+- Railway account (for backend deployment)
+- Vercel account (for frontend deployment)
+- Git repository (GitHub, GitLab, or Bitbucket)
 
 ---
 
