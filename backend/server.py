@@ -64,11 +64,21 @@ except ImportError:
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# Import production configuration
+# Import production configuration and logging
 from config import settings
+from logging_config import setup_logging, get_logger, log_request, log_error
+from rate_limiter import create_rate_limit_dependency, rate_limiter
+from file_validator import validate_upload_file
+
+# Setup logging
+setup_logging()
+logger = get_logger("server")
 
 # MongoDB connection
-client = AsyncIOMotorClient(settings.mongodb_uri)
+client = AsyncIOMotorClient(
+    settings.mongodb_uri,
+    serverSelectionTimeoutMS=settings.mongodb_timeout
+)
 db = client[settings.db_name]
 
 # Import and configure authentication
