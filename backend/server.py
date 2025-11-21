@@ -977,6 +977,20 @@ async def upload_receipt(
 ):
     """Upload and process a receipt (supports images and PDFs)"""
     
+    # Log upload attempt
+    logger.info(
+        f"Receipt upload started for user {current_user.email}",
+        extra={
+            "user_id": current_user.id,
+            "filename": file.filename,
+            "file_size": len(await file.read()),
+            "mime_type": getattr(validated_file, 'validated_mime_type', 'unknown')
+        }
+    )
+    
+    # Reset file pointer after size check
+    await file.seek(0)
+    
     try:
         # Validate file
         if not file.filename:
