@@ -193,6 +193,14 @@ class Settings(BaseSettings):
         description="Enable metrics collection"
     )
     
+    # =====================
+    # Stripe Configuration
+    # =====================
+    stripe_api_key: str = Field(
+        default="sk_test_emergent",
+        description="Stripe API key for payment processing"
+    )
+    
     class Config:
         env_file = '.env'
         env_file_encoding = 'utf-8'
