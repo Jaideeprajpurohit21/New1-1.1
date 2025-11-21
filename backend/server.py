@@ -88,6 +88,7 @@ class ReceiptItem(BaseModel):
     
 class Receipt(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str  # New field to link receipts to users
     filename: str
     original_file_path: Optional[str] = None  # New field for permanent storage
     upload_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
