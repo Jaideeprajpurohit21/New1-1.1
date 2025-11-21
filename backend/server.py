@@ -1389,6 +1389,9 @@ app.include_router(api_router)
 # Include auth router
 app.include_router(auth_router)
 
+# Include billing router
+app.include_router(billing_router)
+
 # Include ML router if available
 if ML_API_AVAILABLE:
     app.include_router(ml_router)
