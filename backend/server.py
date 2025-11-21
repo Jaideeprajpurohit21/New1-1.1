@@ -919,6 +919,7 @@ async def upload_receipt(
         # Create receipt record with permanent file path
         receipt_data = {
             "id": receipt_id,
+            "user_id": current_user.id,
             "filename": file.filename,
             "original_file_path": permanent_file_path,
             "upload_date": datetime.now(timezone.utc),
