@@ -897,7 +897,8 @@ async def root():
 async def upload_receipt(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
-    category: str = "Auto-Detect"
+    category: str = "Auto-Detect",
+    current_user: User = Depends(get_current_user)
 ):
     """Upload and process a receipt (supports images and PDFs)"""
     
