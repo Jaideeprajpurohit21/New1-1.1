@@ -1019,8 +1019,8 @@ async def get_receipts(
 ):
     """Get all receipts with optional search and filtering"""
     try:
-        # Build MongoDB query
-        query = {}
+        # Build MongoDB query - filter by user_id
+        query = {"user_id": current_user.id}
         
         # Add search filter
         if search:
