@@ -43,5 +43,9 @@ python-dotenv>=1.0.0
 pydantic-settings>=2.0.0
 aiohttp>=3.8.0
 
+# File validation and security
+python-magic>=0.4.27
+PyMuPDF>=1.23.0
+
 # Production dependencies
 emergentintegrations
