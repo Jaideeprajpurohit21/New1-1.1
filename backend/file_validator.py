@@ -89,12 +89,22 @@ class FileValidator:
         """
         Validate image file integrity
         """
+        if not PIL_AVAILABLE:
+            # Basic validation without PIL
+            if len(file_content) > 50 * 1024 * 1024:  # 50MB limit
+                return False, "Image file too large"
+            return True, "Basic image validation passed (PIL not available)"
+        
         try:
+            import io
             # Try to open image with PIL
             image = Image.open(io.BytesIO(file_content))
             
             # Verify image can be loaded
             image.verify()
+            
+            # Reopen for size check (verify() closes the image)
+            image = Image.open(io.BytesIO(file_content))
             
             # Check image dimensions (reasonable limits)
             width, height = image.size
