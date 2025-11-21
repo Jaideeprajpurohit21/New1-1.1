@@ -1252,13 +1252,14 @@ async def get_categories(current_user: User = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail="Failed to retrieve categories")
 
 @api_router.get("/search/suggestions")
-async def get_search_suggestions(q: str = Query(..., min_length=2)):
+async def get_search_suggestions(q: str = Query(..., min_length=2), current_user: User = Depends(get_current_user)):
     """Get search suggestions based on merchant names and receipt text"""
     try:
         # Search for matching merchants and common terms
         pipeline = [
             {
                 "$match": {
+                    "user_id": current_user.id,
                     "$or": [
                         {"merchant_name": {"$regex": q, "$options": "i"}},
                         {"searchable_text": {"$regex": q, "$options": "i"}}
