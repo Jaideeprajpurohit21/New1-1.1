@@ -87,8 +87,16 @@ db = client[settings.db_name]
 from auth import set_database, get_current_user, get_current_user_optional, User
 from auth_routes import auth_router
 
+# Import billing system
+from billing_service import BillingService
+from billing_routes import billing_router, set_billing_service
+
 # Set database for auth module
 set_database(db)
+
+# Initialize and configure billing service
+billing_service = BillingService(db)
+set_billing_service(billing_service)
 
 # Middleware for logging and rate limiting
 class LoggingMiddleware(BaseHTTPMiddleware):
