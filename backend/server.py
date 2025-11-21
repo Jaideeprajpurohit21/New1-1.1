@@ -1129,11 +1129,11 @@ async def delete_receipt(receipt_id: str, current_user: User = Depends(get_curre
         raise HTTPException(status_code=500, detail="Failed to delete receipt")
 
 @api_router.post("/receipts/export/csv")
-async def export_receipts_csv(filters: ExportFilters = None):
+async def export_receipts_csv(filters: ExportFilters = None, current_user: User = Depends(get_current_user)):
     """Export receipts as CSV with filtering options and tax summary"""
     try:
-        # Build query based on filters
-        query = {}
+        # Build query based on filters - filter by user_id
+        query = {"user_id": current_user.id}
         
         if filters:
             if filters.start_date or filters.end_date:
