@@ -89,8 +89,55 @@ from auth_routes import auth_router
 # Set database for auth module
 set_database(db)
 
-# Create the main app without a prefix
-app = FastAPI(title="Lumina - Enhanced Receipt OCR API", version="2.0.0")
+# Middleware for logging and rate limiting
+class LoggingMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        start_time = time.time()
+        
+        # Log request
+        log_request(logger, request)
+        
+        try:
+            response = await call_next(request)
+            
+            # Add processing time
+            process_time = time.time() - start_time
+            response.headers["X-Process-Time"] = str(process_time)
+            
+            # Add rate limit headers if available
+            if hasattr(request.state, 'rate_limit_info'):
+                info = request.state.rate_limit_info
+                response.headers["X-RateLimit-Limit"] = str(info["limit"])
+                response.headers["X-RateLimit-Remaining"] = str(info["remaining"])
+                response.headers["X-RateLimit-Reset"] = str(info["reset_time"])
+            
+            # Log response
+            logger.info(
+                f"Request completed: {request.method} {request.url.path} - {response.status_code}",
+                extra={
+                    "status_code": response.status_code,
+                    "process_time": process_time
+                }
+            )
+            
+            return response
+            
+        except Exception as e:
+            process_time = time.time() - start_time
+            log_error(logger, e, {
+                "method": request.method,
+                "url": str(request.url),
+                "process_time": process_time
+            })
+            raise
+
+# FastAPI app initialization
+app = FastAPI(
+    title="Lumina Enhanced Receipt OCR API",
+    description="Advanced AI-powered receipt processing with OCR and intelligent categorization",
+    version="2.0.0",
+    debug=settings.debug
+)
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
