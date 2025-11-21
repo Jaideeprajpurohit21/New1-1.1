@@ -31,8 +31,8 @@ const getBackendURL = () => {
   throw new Error('REACT_APP_BACKEND_URL environment variable is required for production');
 };
 
-// Configure axios with automatic backend detection
-const BACKEND_URL = detectBackendURL();
+// Configure axios with environment-based backend URL
+const BACKEND_URL = getBackendURL();
 export const API_BASE_URL = `${BACKEND_URL}/api`;
 
 console.log(`🔗 API Base URL: ${API_BASE_URL}`);
