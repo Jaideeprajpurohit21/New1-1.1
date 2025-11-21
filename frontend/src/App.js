@@ -393,6 +393,7 @@ const LuminaApp = () => {
                 open={showExportDialog}
                 onOpenChange={setShowExportDialog}
               />
+              <UserDropdown />
             </div>
           </div>
         </div>
