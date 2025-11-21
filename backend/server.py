@@ -1014,7 +1014,8 @@ async def get_receipts(
     skip: int = 0, 
     limit: int = 100,
     search: Optional[str] = Query(None, description="Search through all receipt text"),
-    category: Optional[str] = Query(None, description="Filter by category")
+    category: Optional[str] = Query(None, description="Filter by category"),
+    current_user: User = Depends(get_current_user)
 ):
     """Get all receipts with optional search and filtering"""
     try:
