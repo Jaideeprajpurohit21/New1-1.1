@@ -20,6 +20,12 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import axios from 'axios';
 import './App.css';
 
+// Import authentication components
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import LoginPage from './pages/LoginPage';
+import UserDropdown from './components/UserDropdown';
+
 // Import new API utilities
 import { api, healthCheck, getErrorMessage, API_BASE_URL } from './utils/api';
 
