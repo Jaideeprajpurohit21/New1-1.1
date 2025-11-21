@@ -961,10 +961,19 @@ async def root():
 
 @api_router.post("/receipts/upload", response_model=Receipt)
 async def upload_receipt(
+    request: Request,
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     category: str = "Auto-Detect",
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    _rate_limit: None = Depends(
+        create_rate_limit_dependency(
+            endpoint="upload",
+            limit=settings.upload_rate_limit,
+            window_minutes=1
+        )
+    ),
+    validated_file: UploadFile = Depends(validate_upload_file)
 ):
     """Upload and process a receipt (supports images and PDFs)"""
     
