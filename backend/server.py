@@ -1043,10 +1043,10 @@ async def get_receipts(
         raise HTTPException(status_code=500, detail="Failed to retrieve receipts")
 
 @api_router.get("/receipts/{receipt_id}", response_model=Receipt)
-async def get_receipt(receipt_id: str):
+async def get_receipt(receipt_id: str, current_user: User = Depends(get_current_user)):
     """Get a specific receipt by ID"""
     try:
-        receipt = await db.receipts.find_one({"id": receipt_id})
+        receipt = await db.receipts.find_one({"id": receipt_id, "user_id": current_user.id})
         if not receipt:
             raise HTTPException(status_code=404, detail="Receipt not found")
         return Receipt(**parse_from_mongo(receipt))
