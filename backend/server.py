@@ -46,7 +46,6 @@ import csv
 import re
 import traceback
 from pdf2image import convert_from_path
-import tempfile
 
 # Import the transaction processor
 import sys
