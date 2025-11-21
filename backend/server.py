@@ -1081,11 +1081,11 @@ async def get_receipt_file(receipt_id: str, current_user: User = Depends(get_cur
         raise HTTPException(status_code=500, detail="Failed to retrieve receipt file")
 
 @api_router.put("/receipts/{receipt_id}/category")
-async def update_receipt_category(receipt_id: str, category_update: CategoryUpdate):
+async def update_receipt_category(receipt_id: str, category_update: CategoryUpdate, current_user: User = Depends(get_current_user)):
     """Update receipt category"""
     try:
         result = await db.receipts.update_one(
-            {"id": receipt_id},
+            {"id": receipt_id, "user_id": current_user.id},
             {"$set": {"category": category_update.category}}
         )
         
