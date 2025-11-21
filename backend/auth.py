@@ -75,10 +75,17 @@ class User(UserBase):
     hashed_password: Optional[str] = None
     created_at: datetime
     
+    # Billing fields
+    stripe_customer_id: Optional[str] = None
+    stripe_subscription_id: Optional[str] = None
+    stripe_subscription_status: Optional[str] = None
+    billing_period_start: Optional[datetime] = None
+    billing_period_end: Optional[datetime] = None
+    
     class Config:
         populate_by_name = True
         json_encoders = {ObjectId: str}
-        allow_population_by_field_name = True
+        validate_by_name = True  # Updated for Pydantic v2
 
 class UserResponse(BaseModel):
     id: str
