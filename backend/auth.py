@@ -23,10 +23,13 @@ from bson import ObjectId
 
 logger = logging.getLogger(__name__)
 
+# Import production configuration
+from config import settings
+
 # JWT Configuration
-SECRET_KEY = secrets.token_urlsafe(32)
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_DAYS = 7
+SECRET_KEY = settings.jwt_secret
+ALGORITHM = settings.jwt_algorithm
+ACCESS_TOKEN_EXPIRE_DAYS = settings.jwt_expire_days
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
