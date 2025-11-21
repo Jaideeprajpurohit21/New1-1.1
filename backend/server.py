@@ -987,21 +987,8 @@ async def upload_receipt(
 ):
     """Upload and process a receipt (supports images and PDFs)"""
     
-    # Log upload attempt
-    logger.info(
-        f"Receipt upload started for user {current_user.email}",
-        extra={
-            "user_id": current_user.id,
-            "filename": file.filename,
-            "file_size": len(await file.read()),
-            "mime_type": getattr(validated_file, 'validated_mime_type', 'unknown')
-        }
-    )
-    
-    # Reset file pointer after size check
-    await file.seek(0)
-    
-    try:
+    # Check receipt limit before processing
+    can_upload, limit_message = await billing_service.check_receipt_limit(current_user)\n    if not can_upload:\n        logger.warning(\n            f\"Receipt limit exceeded for user {current_user.email}: {limit_message}\",\n            extra={\n                \"user_id\": current_user.id,\n                \"plan\": current_user.plan,\n                \"filename\": file.filename\n            }\n        )\n        raise HTTPException(\n            status_code=status.HTTP_402_PAYMENT_REQUIRED,\n            detail={\n                \"error\": \"Receipt limit exceeded\",\n                \"message\": limit_message,\n                \"upgrade_available\": current_user.plan == \"free\"\n            }\n        )\n    \n    # Log upload attempt\n    logger.info(\n        f\"Receipt upload started for user {current_user.email}\",\n        extra={\n            \"user_id\": current_user.id,\n            \"filename\": file.filename,\n            \"file_size\": len(await file.read()),\n            \"mime_type\": getattr(validated_file, 'validated_mime_type', 'unknown')\n        }\n    )\n    \n    # Reset file pointer after size check\n    await file.seek(0)\n    \n    try:
         # Validate file
         if not file.filename:
             raise HTTPException(status_code=400, detail="No file provided")
