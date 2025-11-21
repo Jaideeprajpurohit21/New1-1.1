@@ -1,20 +1,22 @@
 #!/usr/bin/env python3
 """
 LUMINA - AI-POWERED RECEIPT MANAGEMENT SYSTEM
-Backend Server Module
+Advanced Receipt OCR and AI Categorization Service
 
 Copyright (c) 2024 Jaideep Singh Rajpurohit. All rights reserved.
-
 PROPRIETARY SOFTWARE - UNAUTHORIZED USE PROHIBITED
-This software contains confidential and proprietary information of Jaideep Singh Rajpurohit.
-Any reproduction, distribution, or transmission of this software, in whole or in part,
-without the prior written consent of Jaideep Singh Rajpurohit is strictly prohibited.
-
-Trade secrets contained herein are protected under applicable laws.
-Unauthorized disclosure may result in civil and criminal prosecution.
-
-For licensing information, contact: legal@luminatech.com
 """
+
+# Required dependencies for new features
+try:
+    import magic
+except ImportError:
+    print("Warning: python-magic not installed. File type detection will be limited.")
+
+try:
+    import fitz  # PyMuPDF
+except ImportError:
+    print("Warning: PyMuPDF not installed. PDF validation will be limited.")
 
 from fastapi import FastAPI, APIRouter, UploadFile, File, HTTPException, BackgroundTasks, Query, Depends, Request, Response
 from fastapi.responses import StreamingResponse, FileResponse, JSONResponse
