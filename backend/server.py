@@ -16,7 +16,7 @@ Unauthorized disclosure may result in civil and criminal prosecution.
 For licensing information, contact: legal@luminatech.com
 """
 
-from fastapi import FastAPI, APIRouter, UploadFile, File, HTTPException, BackgroundTasks, Query
+from fastapi import FastAPI, APIRouter, UploadFile, File, HTTPException, BackgroundTasks, Query, Depends
 from fastapi.responses import StreamingResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
