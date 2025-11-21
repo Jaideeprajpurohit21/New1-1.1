@@ -18,8 +18,12 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [accessToken, setAccessToken] = useState(null);
 
-  // API base URL
-  const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'https://expense-ai-5.preview.emergentagent.com';
+  // Import API base URL from utilities
+  const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || (
+    process.env.NODE_ENV === 'development' 
+      ? 'http://localhost:8000' 
+      : window.location.origin
+  );
 
   // Configure axios defaults
   useEffect(() => {
