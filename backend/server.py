@@ -1057,10 +1057,10 @@ async def get_receipt(receipt_id: str, current_user: User = Depends(get_current_
         raise HTTPException(status_code=500, detail="Failed to retrieve receipt")
 
 @api_router.get("/receipts/{receipt_id}/file")
-async def get_receipt_file(receipt_id: str):
+async def get_receipt_file(receipt_id: str, current_user: User = Depends(get_current_user)):
     """Get the original uploaded receipt file"""
     try:
-        receipt = await db.receipts.find_one({"id": receipt_id})
+        receipt = await db.receipts.find_one({"id": receipt_id, "user_id": current_user.id})
         if not receipt:
             raise HTTPException(status_code=404, detail="Receipt not found")
         
