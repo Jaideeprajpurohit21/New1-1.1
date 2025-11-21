@@ -1228,10 +1228,11 @@ async def export_receipts_csv(filters: ExportFilters = None, current_user: User 
         raise HTTPException(status_code=500, detail="Failed to export receipts")
 
 @api_router.get("/categories")
-async def get_categories():
+async def get_categories(current_user: User = Depends(get_current_user)):
     """Get all unique categories with counts"""
     try:
         pipeline = [
+            {"$match": {"user_id": current_user.id}},
             {"$group": {"_id": "$category", "count": {"$sum": 1}}},
             {"$sort": {"count": -1}}
         ]
