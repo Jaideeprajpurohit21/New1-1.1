@@ -286,26 +286,4 @@ def validate_upload_file(file: UploadFile):
     
     return file
 
-# Import required modules that might not be available
-try:
-    import io
-except ImportError:
-    logger.warning("io module not available")
-
-try:
-    import fitz
-except ImportError:
-    logger.warning("PyMuPDF not available - PDF validation will be limited")
-    
-    def _validate_pdf_fallback(self, file_content: bytes, filename: str) -> Tuple[bool, str]:
-        """Fallback PDF validation without PyMuPDF"""
-        if not file_content.startswith(b'%PDF-'):
-            return False, "Invalid PDF signature"
-        
-        # Basic checks
-        if len(file_content) > 50 * 1024 * 1024:  # 50MB limit for PDFs
-            return False, "PDF file too large"
-        
-        return True, "Basic PDF validation passed"
-    
-    FileValidator._validate_pdf = _validate_pdf_fallback
+# File validator is ready to use with graceful fallbacks
