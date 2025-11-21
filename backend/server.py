@@ -37,6 +37,7 @@ import json
 import io
 import csv
 import re
+import traceback
 from pdf2image import convert_from_path
 import tempfile
 
