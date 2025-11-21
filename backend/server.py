@@ -1301,9 +1301,9 @@ else:
 
 app.add_middleware(
     CORSMiddleware,
+    allow_origins=[settings.frontend_origin, "http://localhost:3000"],  # Allow frontend origin and local dev
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
