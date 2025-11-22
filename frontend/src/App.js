@@ -217,6 +217,18 @@ const LuminaApp = () => {
     setTimeout(() => setNotification(null), duration);
   };
 
+  // Load billing information
+  const loadBillingInfo = async () => {
+    try {
+      const response = await api.get('/billing/info');
+      setBillingInfo(response.data);
+      return response.data;
+    } catch (err) {
+      console.warn('Failed to load billing info:', getErrorMessage(err));
+      return null;
+    }
+  };
+
   // Initialize app with API health check
   useEffect(() => {
     const initializeApp = async () => {
@@ -228,9 +240,10 @@ const LuminaApp = () => {
       
       if (healthResult.success) {
         console.log('✅ API Health Check passed:', healthResult.message);
-        // Load data
+        // Load data including billing info
         await fetchReceipts();
         await fetchCategories();
+        await loadBillingInfo();
       } else {
         console.error('❌ API Health Check failed:', healthResult.error);
         setError(`Unable to connect to server: ${healthResult.error}`);
