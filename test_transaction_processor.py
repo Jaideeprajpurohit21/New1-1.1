@@ -73,7 +73,7 @@ def create_test_receipt(merchant_type="starbucks"):
 
 def test_transaction_processor():
     """Test Master Transaction Processor Integration"""
-    base_url = "https://expense-ai-5.preview.emergentagent.com"
+    base_url = "https://bill-tracker-102.preview.emergentagent.com"
     api_url = f"{base_url}/api"
     
     print("🔥 Testing Master Transaction Processor Integration")

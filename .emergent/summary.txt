@@ -1,68 +1,86 @@
 <analysis>
-The AI engineer successfully guided the Lumina application from an MVP to a sophisticated, ML-powered expense management system. Initially, the focus was on core features like the Receipt Detail View and OCR accuracy, alongside implementing a robust copyright framework. Subsequently, the AI developed and integrated advanced amount and date extractors, culminating in a master  function. A significant phase involved building a complete ML category prediction system, including model training, feature engineering, and API endpoints, which required extensive dependency management and error resolution. The final stages were dominated by debugging frontend-backend connectivity issues, Pydantic validation errors due to data type mismatches, and user experience enhancements for the upload process, ensuring dynamic URL detection, retry logic, and comprehensive error handling. The watermark was also removed. The AI consistently confirmed functionality through rigorous testing, even when user perception suggested ongoing issues, demonstrating the system's operational readiness.
+My analysis of the trajectory indicates a multi-stage development process, transitioning the Lumina application from a functional but simple MVP into a production-ready, multi-tenant SaaS application.
+
+The initial phase was dominated by extensive and persistent debugging of a frontend-backend connectivity issue. This was a complex deployment/environment problem, not a code logic flaw, ultimately traced to the supervisor process not loading frontend environment variables correctly. The resolution involved several attempts, including hardcoding URLs, before a stable configuration was achieved.
+
+Following the connectivity fix, the work shifted to core feature implementation and enhancement. This included:
+1.  **Authentication:** A complete JWT-based authentication system was built from the ground up, including social login options. This involved creating user models, auth-specific backend routes (), and scoping all existing data endpoints (receipts, stats) to the logged-in user. The frontend was updated with an , login/signup pages, and protected routes.
+2.  **Production Hardening:** The backend was significantly refactored for production. This included centralized Pydantic configuration (), structured logging, rate limiting for uploads, robust file validation, and a global exception handler.
+3.  **Stripe Billing:** A full subscription billing system was integrated using Stripe. This added new models, services, and endpoints for creating checkout sessions and handling webhooks. The application logic was updated to enforce plan-based receipt limits, and the frontend was equipped with a billing page and an upgrade prompt.
+
+The work was highly iterative, with the AI engineer responding to explicit user requests, debugging emergent issues (like OCR errors), and progressively adding layers of complexity and robustness to the application. The most recent task was finalizing the Stripe integration on the frontend.
+
+The user's primary language is English. All future responses should be in English.
 </analysis>
-
 <product_requirements>
-Lumina is an AI-powered SaaS web application for automated expense management, targeting small businesses and freelancers. Its primary goal is to transform receipts into categorized, accounting-ready data. The MVP provided receipt upload, OCR (EasyOCR), basic dashboard, manual categorization, and CSV export. Post-MVP, original file storage, AI auto-categorization, and powerful search were added. Key current and requested features include:
-1.  **Receipt Detail View:** A modal showing detailed receipt information, including a View Original Receipt option.
-2.  **OCR Performance & Accuracy:** GPU-accelerated EasyOCR, enhanced regex for amount detection, and optimized parameters.
-3.  **Copyright & Licensing:** Comprehensive proprietary licensing and copyright notices (Jaideep Singh Rajpurohit).
-4.  **Robust Extractors:**  and  for highly accurate data parsing.
-5.  **Enhanced Category Prediction:** Identifying 10-15 predictive ML features and generating a synthetic dataset for training a Random Forest classifier.
-6.  **Master Transaction Processor:** A  function integrating robust extractors and category prediction.
-7.  **Email Integration System:** Initially requested, but deferred.
-8.  **Fix Failed to load receipts**: Dynamic backend URL detection for local/production, retry logic, user-friendly error messages, and frontend build/deploy for production.
-9.  **Remove Made with Emergent watermark:** Clean the branding for a professional appearance.
+Lumina is an AI-powered SaaS web application for automated expense management. Initially a single-user prototype, the goal is to evolve it into a multi-tenant, production-ready application.
+
+**Core Functionality (Implemented):**
+-   **Receipt Processing:** Users can upload receipt files (JPG, PNG, PDF). The system uses OCR to extract text, and custom extractors parse the amount, date, and merchant. A machine learning model predicts the expense category.
+-   **Dashboard:** A central dashboard displays a list of all processed receipts, key statistics (total amount, receipt count), and filtering/search capabilities.
+-   **File Storage:** Original receipt files are stored and can be viewed from a receipt detail view.
+
+**Key Feature Implementations from Trajectory:**
+1.  **Multi-User Authentication:** The system must support user signup and login. All data, especially receipts and analytics, must be scoped to the individual user. Implemented using JWT with email/password and Google social login.
+2.  **Subscription Billing (Stripe):** The application needs a freemium model with a free and pro plan, each with different monthly receipt upload limits. Users must be able to upgrade their plan via a Stripe checkout. The system must automatically manage user subscription status via Stripe webhooks.
+3.  **Production Readiness:** The backend and frontend must be configured for production deployment on platforms like Railway and Vercel, using environment variables for sensitive data and API URLs. This includes robust error handling, logging, rate limiting, and input validation.
+4.  **Bug Fixes:** Resolved persistent frontend-backend connectivity issues, PDF processing failures, and inaccuracies in amount detection.
 </product_requirements>
-
 <key_technical_concepts>
--   **Full-stack:** React (frontend), FastAPI (backend), MongoDB (database).
--   **OCR & Image Processing:** EasyOCR, , OpenCV, Pillow, .
--   **UI/UX:** Shadcn UI components, Tailwind CSS,  icons.
--   **Machine Learning:** Random Forest Classifier, TF-IDF, Feature Engineering, , , .
--   **Networking:** CORS, , , Environment Variables for dynamic URLs.
--   **Deployment:** backend                          RUNNING   pid 27, uptime 0:00:03
-code-server                      RUNNING   pid 29, uptime 0:00:03
-frontend                         STOPPING  
-mongodb                          RUNNING   pid 35, uptime 0:00:03
-supervisor> , yarn run v1.22.22
-info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command., , .
+-   **Frameworks:** FastAPI (Python backend), React (frontend).
+-   **Database:** MongoDB for storing user and receipt data.
+-   **Authentication:** JWT (JSON Web Tokens) with  for password hashing, and Google OAuth via the  library.
+-   **Billing:** Stripe integration for subscription management (checkout sessions, webhooks).
+-   **Backend:** Pydantic for data validation and settings management, Supervisor for process management, Uvicorn as the ASGI server.
+-   **Frontend:** Axios for API calls, React Router for navigation, React Context for state management ().
+-   **ML/OCR:** EasyOCR, Scikit-learn, OpenCV.
 </key_technical_concepts>
-
 <code_architecture>
-The application uses a React frontend, a FastAPI backend, and MongoDB.
+The application follows a standard monolithic repository structure with separate  and  directories.
 
 
 
--   : Includes , , , , , , , , , , , .
--   : Core FastAPI app. Modified for OCR processing with GPU, amount regex, AI categorization, CRUD, file serving, and now integrates . The  class was heavily refactored to use the new ML-powered . The  Pydantic model was updated to include  and . CORS middleware is configured. Includes ML router.
--   : Main React component. Now uses  for all API calls. Implements dynamic backend URL detection, retry logic, enhanced error state management, and improved upload feedback. Removed hardcoded API URLs.  imported from .
--   : New file containing  instance with  for robust API communication. Dynamically determines  for local () vs. production ( or ).
--   : Houses the  function, integrating , , and the ML category prediction logic.
--   : New file for ML model training (), feature extraction (TF-IDF, numerical features, one-hot encoding), persistence (), and prediction. Handles categorical feature encoding and small dataset issues.
--   , , : Environment files for managing  for local development and production.
--   : Modified to remove the Made with Emergent watermark badge and update the page title/meta description to Lumina - AI-Powered Receipt Management.
+-   ****
+    -   **Importance:** The core FastAPI application file. It defines all API endpoints, integrates middleware, and orchestrates the application logic.
+    -   **Changes:** Heavily modified to integrate authentication, production configurations, and new features. All receipt-related endpoints (, , etc.) were secured with a  dependency and updated to filter data by . It now includes routers for authentication () and billing (), a global exception handler, logging, and a  endpoint. The upload endpoint was enhanced with rate limiting and file validation.
+
+-   ** & **
+    -   **Importance:** These new files contain the entire user authentication logic.  handles user model interactions, password hashing, and JWT creation/verification.  defines the , , and  endpoints.
+    -   **Changes:** Created from scratch to implement the multi-tenant authentication feature.
+
+-   ** & **
+    -   **Importance:** These new files manage the Stripe billing integration.  contains the logic for creating Stripe checkout sessions and handling webhook events.  exposes the  and  endpoints.
+    -   **Changes:** Created from scratch to add subscription billing.
+
+-   ****
+    -   **Importance:** The main React component that structures the entire user interface.
+    -   **Changes:** Refactored to be the central point for application state and routing. It was wrapped with an  and now uses React Router to render , , , or the main  dashboard based on auth state. It now manages billing information and conditionally displays an  when the user hits their receipt limit.
+
+-   ****
+    -   **Importance:** A new React Context that provides a global state for user authentication. It manages the user object, access token, and provides , , and  methods to the rest of the application.
+    -   **Changes:** Created from scratch to manage frontend authentication state.
+
+-   ****
+    -   **Importance:** A centralized Axios client for making all frontend API calls.
+    -   **Changes:** Updated to read the backend URL from environment variables (). An interceptor was added to automatically attach the  header to all requests if a user is logged in, simplifying secure API calls.
 </code_architecture>
-
 <pending_tasks>
--   **Email Integration System:** This feature was initially requested by the user but was explicitly deferred.
+-   **Email Integration System:** This feature was requested early in the project's lifecycle but was explicitly deferred to prioritize core functionality like authentication and billing. It has not been implemented.
 </pending_tasks>
-
 <current_work>
-Immediately before this summary, the AI engineer was engaged in thoroughly debugging and confirming the system's functionality, particularly regarding receipt uploads and frontend-backend connectivity, in response to persistent user reports of failures. Despite the AI's repeated successful tests, the user continued to claim issues. The AI's latest actions confirmed that:
--   All backend services (FastAPI, MongoDB) are .
--   The backend API is  on port , with successful ML categorization working for uploads.
--   The frontend is successfully connecting to the correct backend URL ().
--   The Failed to load receipts error message has been eliminated by implementing dynamic backend URL detection and robust retry logic.
--   The Loader2 is not defined runtime error in the  component was fixed by correctly importing  from  in .
--   The Made with Emergent watermark was removed from .
--   The upload dialog is  for real user interactions, clearly displaying supported file types (JPG, PNG, PDF, TIFF, BMP).
--   The  was enhanced with better user feedback for uploads, including  state and improved notifications.
--   The perception of failure was attributed to unsupported file types being uploaded by the user or insufficient waiting time for processing.
+The most recent work focused on implementing a comprehensive Stripe subscription billing system. The backend was fully built out with:
+-   Updated user models to include Stripe-related fields (, , etc.).
+-   A  to interact with the Stripe API for creating checkout sessions and managing subscription statuses from webhooks.
+-   New API endpoints under  for checkout and webhooks.
+-   Logic in the  endpoint to enforce monthly receipt limits based on the user's current plan (free or pro).
 
-The system is now confirmed to be  with all previous issues resolved and verified through extensive testing.
+On the frontend, the work involved creating the necessary UI components and integrating them into the main application flow:
+-    to show plan details and an Upgrade button.
+-    as a modal to inform users when they've hit their upload limit.
+-   The main  was modified to fetch the user's billing status, manage an  state, and update the  function to catch the 403 Forbidden error (indicating the limit was reached) and trigger the upgrade prompt.
+
+Immediately before this summary, the AI engineer was finalizing the frontend integration. The very last action was editing the  file to ensure it correctly receives and uses props passed down from . This suggests the core logic is in place, but the final connection and testing of the UI component were still in progress.
 </current_work>
-
 <optional_next_step>
-Confirm with the user that their current upload experience now works as described, and ask if they have any new features or enhancements they'd like to work on.
+Restart the frontend service and perform a full end-to-end test of the Stripe billing and upgrade flow to ensure the  component works as expected.
 </optional_next_step>
