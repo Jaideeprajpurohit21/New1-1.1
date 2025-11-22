@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "User wants comprehensive enhancements across all areas starting with Phase 1: Fix receipt click functionality to show detailed expanded view when clicking on receipts. The expanded view should show detailed features like time, date, amount and include a button to see the real image of that receipt. URGENT: Fix slow OCR performance by enabling GPU acceleration and improve amount detection with better regex patterns for various dollar formats like $12.34, 12.34, TOTAL: $12.34, etc."
+user_problem_statement: "User requested a public landing page for Lumina with specific routing: '/' as public marketing page, '/login' and '/signup' as auth pages, '/app/*' as the main dashboard (currently public as auth is broken). Landing page should include: Hero section with title/subtitle/CTA, Features section (4 cards), How It Works (3 steps), Pricing preview (Free vs Pro), and Footer with links. If user is logged in, landing page should show 'Go to Dashboard' button instead of 'Start Free Demo'."
 
 backend:
   - task: "ML-Enhanced Category Prediction System"
