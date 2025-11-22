@@ -24,6 +24,7 @@ import './App.css';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
+import LandingPage from './pages/LandingPage';
 import UserDropdown from './components/UserDropdown';
 
 // Import billing components
