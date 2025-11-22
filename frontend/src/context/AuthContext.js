@@ -51,26 +51,11 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const checkExistingSession = async () => {
-    try {
-      // Check if we have a valid session
-      const response = await axios.get(`${API_BASE_URL}/api/auth/me`, {
-        withCredentials: true
-      });
-      
-      if (response.data) {
-        setUser(response.data);
-        // Get access token if available in response headers or set a flag
-        const token = response.headers['authorization'] || 'session-based';
-        setAccessToken(token);
-      }
-    } catch (error) {
-      console.log('No existing session found');
-      // Clear any existing auth state
-      setUser(null);
-      setAccessToken(null);
-    } finally {
-      setLoading(false);
-    }
+    // PUBLIC DEMO MODE: Skip auth check, just mark as not loading
+    console.log('📢 PUBLIC DEMO MODE: No authentication required');
+    setUser(null);
+    setAccessToken(null);
+    setLoading(false);
   };
 
   const processOAuthSession = async (sessionId) => {
