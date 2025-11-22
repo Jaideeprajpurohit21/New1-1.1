@@ -258,6 +258,7 @@ const LuminaApp = () => {
   const handleReceiptUpload = async (file, category = 'Uncategorized') => {
     try {
       setUploadingReceipt(true);
+      setError(null);
       
       // Show immediate feedback
       showNotification('Uploading receipt...', 'info');
@@ -273,16 +274,24 @@ const LuminaApp = () => {
       const successMessage = `✅ Receipt uploaded successfully! ${uploadedReceipt.merchant_name ? `Detected: ${uploadedReceipt.merchant_name}` : ''} → ${uploadedReceipt.category || 'Processing...'}`;
       showNotification(successMessage, 'success');
       
-      // Refresh data
+      // Refresh data and billing info
       fetchReceipts();
       fetchCategories();
+      await loadBillingInfo();
       
     } catch (error) {
       console.error('Error uploading receipt:', error);
       
-      // More detailed error message using the utility
-      const errorMessage = `Failed to upload receipt. ${getErrorMessage(error)}`;
-      showNotification(errorMessage, 'error');
+      // Check if it's a receipt limit error (HTTP 402)
+      if (error.response?.status === 402) {
+        setShowUpgradePrompt(true);
+        showNotification('📊 Receipt limit reached! Time to upgrade to Pro.', 'warning');
+      } else {
+        // More detailed error message using the utility
+        const errorMessage = `Failed to upload receipt. ${getErrorMessage(error)}`;
+        setError(errorMessage);
+        showNotification(errorMessage, 'error');
+      }
     } finally {
       setUploadingReceipt(false);
     }
