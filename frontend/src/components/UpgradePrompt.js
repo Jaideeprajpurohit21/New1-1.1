@@ -38,7 +38,13 @@ const UpgradePrompt = ({ open, onOpenChange, billingInfo }) => {
     }
   };
 
-  if (!open || !billingInfo) return null;
+  if (!open) return null;
+
+  const receiptsUsed = billingInfo?.receipts_used || 0;
+  const receiptLimit = billingInfo?.receipt_limit || 50;
+  const currentPlan = billingInfo?.plan || 'free';
+
+  const onClose = () => onOpenChange(false);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
