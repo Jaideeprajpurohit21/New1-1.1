@@ -653,6 +653,13 @@ const LuminaApp = () => {
           categories={categories}
         />
       )}
+
+      {/* Upgrade Prompt Modal */}
+      <UpgradePrompt
+        open={showUpgradePrompt}
+        onOpenChange={setShowUpgradePrompt}
+        billingInfo={billingInfo}
+      />
     </div>
   );
 };
