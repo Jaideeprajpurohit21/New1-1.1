@@ -88,23 +88,17 @@ function App() {
       <div className="App">
         <BrowserRouter>
           <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<LoginPage />} />
-            <Route path="/billing" element={
-              <ProtectedRoute>
-                <BillingPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/billing/success" element={
-              <ProtectedRoute>
-                <BillingSuccessPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/" element={
-              <ProtectedRoute>
-                <LuminaApp />
-              </ProtectedRoute>
-            } />
+            
+            {/* App Routes - Currently public (auth disabled as requested) */}
+            <Route path="/app" element={<LuminaApp />} />
+            <Route path="/app/billing" element={<BillingPage />} />
+            <Route path="/app/billing/success" element={<BillingSuccessPage />} />
+            
+            {/* Catch all - redirect to landing */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
