@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Crown, X, Zap, ArrowRight, Loader2 } from 'lucide-react';
 import axios from 'axios';
 
-const UpgradePrompt = ({ isOpen, onClose, currentPlan, receiptsUsed, receiptLimit }) => {
+const UpgradePrompt = ({ open, onOpenChange, billingInfo }) => {
   const [upgrading, setUpgrading] = useState(false);
   const [error, setError] = useState('');
 
