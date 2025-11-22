@@ -18,12 +18,10 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [accessToken, setAccessToken] = useState(null);
 
-  // Import API base URL from utilities
-  const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || (
-    process.env.NODE_ENV === 'development' 
-      ? 'http://localhost:8000' 
-      : window.location.origin
-  );
+  // Import API base URL from environment - MUST be set correctly
+  const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || window.location.origin;
+  
+  console.log('🔗 AuthContext API_BASE_URL:', API_BASE_URL);
 
   // Configure axios defaults
   useEffect(() => {
