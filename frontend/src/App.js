@@ -76,7 +76,8 @@ import {
   FileText as FilePdf,
   Bot,
   Sparkles,
-  Loader2
+  Loader2,
+  ArrowRight
 } from 'lucide-react';
 
 
