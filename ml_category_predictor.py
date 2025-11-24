@@ -314,10 +314,15 @@ class TransactionFeatureExtractor:
 class MLCategoryPredictor:
     """Complete ML-based category prediction system"""
     
-    def __init__(self, model_path: str = "/app/models/category_predictor.pkl"):
+    def __init__(self, model_path: str = None):
         """Initialize ML category predictor"""
+        # Use environment variable or default path relative to app root
+        if model_path is None:
+            import os
+            model_path = os.getenv('ML_MODEL_PATH', 'models/category_predictor.pkl')
+        
         self.model_path = Path(model_path)
-        self.model_path.parent.mkdir(exist_ok=True)
+        self.model_path.parent.mkdir(exist_ok=True, parents=True)
         
         self.feature_extractor = TransactionFeatureExtractor()
         self.rf_model = None
