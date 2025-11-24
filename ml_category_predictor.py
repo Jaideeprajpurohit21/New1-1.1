@@ -420,10 +420,15 @@ class MLCategoryPredictor:
         
         return X_scaled, y_encoded
     
-    def train_model(self, dataset_path: str = "/app/synthetic_training_dataset.json") -> Dict[str, Any]:
+    def train_model(self, dataset_path: str = None) -> Dict[str, Any]:
         """Train Random Forest model on synthetic dataset"""
         
         logger.info("Starting ML model training...")
+        
+        # Use environment variable or default path
+        if dataset_path is None:
+            import os
+            dataset_path = os.getenv('TRAINING_DATASET_PATH', 'synthetic_training_dataset.json')
         
         # Prepare training data
         X, y = self.prepare_training_data(dataset_path)
