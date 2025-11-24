@@ -8,34 +8,24 @@
 
       import axios from 'axios';
 
-      /**
-       * Get backend URL from environment variables
-        */
-        const getBackendURL = () => {
-          const backend = "http://3.145.1.41:8000";  // ✅ Your AWS backend
-            console.log("🔗 Using hardcoded backend:", backend);
-              return backend;
-              };
+/**
+ * Get backend URL from environment variables
+ * PUBLIC DEMO MODE - Use current domain
+ */
+const getBackendURL = () => {
+  // Priority 1: Environment variable
+  const envUrl = process.env.REACT_APP_BACKEND_URL;
+  
+  if (envUrl) {
+    console.log(`🔧 Using environment URL: ${envUrl}`);
+    return envUrl;
+  }
 
-              //const getBackendURL = () => {
-                // Use environment variable (prioritize REACT_APP_BACKEND_URL)
-                  //const envUrl = process.env.REACT_APP_BACKEND_URL;
-                    
-                     // if (envUrl) {
-                      //   console.log(`🔧 Using environment URL: ${envUrl}`);
-                       //   return envUrl;
-                        // }
-
-                          // Fallback for development
-                            //if (process.env.NODE_ENV === 'development') {
-                              //  const devUrl = 'http://localhost:8000';
-                                //  console.log(`🏠 Using development fallback: ${devUrl}`);
-                                  //  return devUrl;
-                                    //}
-
-                                      // Production fallback (should not reach here if env vars are set correctly)
-                                       // throw new Error('REACT_APP_BACKEND_URL environment variable is required for production');
-                                       //};//
+  // Priority 2: Use current window location (production)
+  const currentOrigin = window.location.origin;
+  console.log(`🌐 Using current origin: ${currentOrigin}`);
+  return currentOrigin;
+};
 
                                        // Configure axios with environment-based backend URL
                                        const BACKEND_URL = getBackendURL();
