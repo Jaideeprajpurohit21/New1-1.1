@@ -13,10 +13,24 @@
  * PUBLIC DEMO MODE - Use current domain
  */
 const getBackendURL = () => {
-  // Use VSCode online backend through proxy
-  const backend = "/proxy/8000";  
-  console.log("🌐 Using VSCode Proxy Backend:", backend);
-  return backend;
+  // Priority 1: Environment variable (set during build)
+  const envUrl = process.env.REACT_APP_BACKEND_URL;
+  
+  if (envUrl && envUrl !== 'undefined' && envUrl.startsWith('http')) {
+    console.log(`🔧 Using environment URL: ${envUrl}`);
+    return envUrl;
+  }
+
+  // Priority 2: Use current window location origin (production fallback)
+  if (typeof window !== 'undefined') {
+    const currentOrigin = window.location.origin;
+    console.log(`🌐 Using window.location.origin: ${currentOrigin}`);
+    return currentOrigin;
+  }
+
+  // Priority 3: Fallback (should never reach here in browser)
+  console.warn('⚠️ No backend URL found, using fallback');
+  return 'https://bill-tracker-102.preview.emergentagent.com';
 };
 
                                        // Configure axios with environment-based backend URL
