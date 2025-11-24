@@ -657,4 +657,5 @@ async def shutdown_db_client():
 if __name__ == "__main__":
     import uvicorn
     logger.info("🚀 Starting Lumina in PUBLIC DEMO MODE (No Auth Required)")
-    uvicorn.run(app, host="0.0.0.0", port=8001, log_level="info")
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
+

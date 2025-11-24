@@ -13,18 +13,10 @@
  * PUBLIC DEMO MODE - Use current domain
  */
 const getBackendURL = () => {
-  // Priority 1: Environment variable
-  const envUrl = process.env.REACT_APP_BACKEND_URL;
-  
-  if (envUrl) {
-    console.log(`🔧 Using environment URL: ${envUrl}`);
-    return envUrl;
-  }
-
-  // Priority 2: Use current window location (production)
-  const currentOrigin = window.location.origin;
-  console.log(`🌐 Using current origin: ${currentOrigin}`);
-  return currentOrigin;
+  // Use VSCode online backend through proxy
+  const backend = "/proxy/8000";  
+  console.log("🌐 Using VSCode Proxy Backend:", backend);
+  return backend;
 };
 
                                        // Configure axios with environment-based backend URL
