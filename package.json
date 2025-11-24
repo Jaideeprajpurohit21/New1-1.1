@@ -1,0 +1,29 @@
+{
+  "name": "lumina-monorepo",
+  "version": "2.1.0",
+  "private": true,
+  "description": "Lumina AI-Powered Receipt & Expense Management - Monorepo",
+  "workspaces": [
+    "frontend"
+  ],
+  "scripts": {
+    "install:all": "cd frontend && yarn install",
+    "build:frontend": "cd frontend && yarn build",
+    "start:frontend": "cd frontend && yarn start",
+    "test:frontend": "cd frontend && yarn test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/lumina"
+  },
+  "keywords": [
+    "receipt-management",
+    "expense-tracking",
+    "ocr",
+    "ai",
+    "fastapi",
+    "react"
+  ],
+  "author": "Jaideep Singh Rajpurohit",
+  "license": "PROPRIETARY"
+}
