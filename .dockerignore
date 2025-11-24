@@ -55,10 +55,10 @@ Thumbs.db
 *.test.js
 *.test.py
 
-# Development files
-frontend/src/
-frontend/public/
-frontend/package*.json
+# Development files - KEEP FRONTEND FILES FOR BUILD
+# frontend/src/  # NEEDED for Docker build
+# frontend/public/  # NEEDED for Docker build
+# frontend/package*.json  # NEEDED for Docker build
 
 # ML model files (if large)
 *.pkl
