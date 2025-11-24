@@ -9,7 +9,7 @@ PROPRIETARY SOFTWARE - UNAUTHORIZED USE PROHIBITED
 
 import re
 import json
-import numpy as np
+# import numpy as np  # Disabled for deployment - not needed without ML
 from datetime import datetime, date
 from typing import Dict, Optional, Any
 import logging
