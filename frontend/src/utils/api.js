@@ -28,9 +28,9 @@ const getBackendURL = () => {
     return currentOrigin;
   }
 
-  // Priority 3: Fallback (should never reach here in browser)
-  console.warn('⚠️ No backend URL found, using fallback');
-  return 'https://bill-tracker-102.preview.emergentagent.com';
+  // Priority 3: Fallback - use window.location.origin for deployed apps
+  console.warn('⚠️ No backend URL found, using window.location.origin as fallback');
+  return typeof window !== 'undefined' ? window.location.origin : 'https://bill-tracker-102.emergent.host';
 };
 
                                        // Configure axios with environment-based backend URL
