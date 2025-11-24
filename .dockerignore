@@ -44,9 +44,9 @@ Thumbs.db
 .git/
 .gitignore
 
-# Documentation
-*.md
-!README.md
+# Documentation - Keep deployment docs
+# *.md  # Allow markdown files
+# !README.md
 
 # Test files
 **/test/
