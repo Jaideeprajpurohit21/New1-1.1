@@ -335,8 +335,13 @@ class MLCategoryPredictor:
         # Try to load existing model
         self.load_model()
     
-    def prepare_training_data(self, dataset_path: str = "/app/synthetic_training_dataset.json") -> Tuple[np.ndarray, np.ndarray]:
+    def prepare_training_data(self, dataset_path: str = None) -> Tuple[np.ndarray, np.ndarray]:
         """Prepare training data from synthetic dataset"""
+        
+        # Use environment variable or default path
+        if dataset_path is None:
+            import os
+            dataset_path = os.getenv('TRAINING_DATASET_PATH', 'synthetic_training_dataset.json')
         
         logger.info(f"Loading training dataset from {dataset_path}")
         
