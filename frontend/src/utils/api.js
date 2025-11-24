@@ -30,7 +30,7 @@ const getBackendURL = () => {
 
   // Priority 3: Fallback - use window.location.origin for deployed apps
   console.warn('⚠️ No backend URL found, using window.location.origin as fallback');
-  return typeof window !== 'undefined' ? window.location.origin : 'https://bill-tracker-102.emergent.host';
+  return typeof window !== 'undefined' ? window.location.origin : 'https://luminaai.ai';
 };
 
                                        // Configure axios with environment-based backend URL
