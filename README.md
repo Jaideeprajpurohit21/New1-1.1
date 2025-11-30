@@ -4,6 +4,8 @@
 
 Lumina is a sophisticated SaaS application that transforms receipts into categorized, accounting-ready data using advanced AI and machine learning technologies.
 
+Test CI/CD pipeline
+
 ## 🚀 Features
 
 - **AI-Powered OCR**: Extract text from receipts with high accuracy using EasyOCR
