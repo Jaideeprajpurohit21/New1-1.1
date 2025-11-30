@@ -1,0 +1,1312 @@
+
+
+
+
+
+
+		
+#!/usr/bin/env python3
+
+"""
+
+LUMINA - PUBLIC DEMO MODE
+
+This version runs without authentication for demo purposes
+
+"""
+
+
+
+from fastapi import FastAPI, APIRouter, UploadFile, File, HTTPException, BackgroundTasks, Query, Request, Response, status
+
+from fastapi.responses import StreamingResponse, FileResponse, JSONResponse
+
+from fastapi.staticfiles import StaticFiles
+
+from fastapi.exceptions import RequestValidationError
+
+from dotenv import load_dotenv
+
+
+from starlette.middleware.cors import CORSMiddleware
+
+from starlette.middleware.base import BaseHTTPMiddleware
+
+from motor.motor_asyncio import AsyncIOMotorClient
+
+import os
+
+import logging
+
+import time
+
+from pathlib import Path
+
+from pydantic import BaseModel, Field
+
+from typing import List, Optional, Dict, Any
+
+from receipt_parser import parse_receipt, clean_ocr_text
+
+import uuid
+
+from datetime import datetime, timezone
+
+import asyncio
+
+import aiofiles
+
+import io
+
+import csv
+
+import re
+
+import traceback
+
+from pdf2image import convert_from_path
+
+
+
+# Import the transaction processor
+
+import sys
+
+sys.path.append('..')
+
+from transaction_processor import TransactionProcessor
+from transaction_processor import clean_ocr_text 
+
+
+ROOT_DIR = Path(__file__).parent
+
+
+load_dotenv(ROOT_DIR / '.env')
+
+
+
+# Setup basic logging
+
+logging.basicConfig(level=logging.INFO)
+
+logger = logging.getLogger(__name__)
+
+
+
+# MongoDB connection
+
+MONGO_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
+
+DB_NAME = os.getenv("DB_NAME", "lumina_development")
+
+
+
+client = AsyncIOMotorClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+
+db = client[DB_NAME]
+
+
+
+# Middleware for logging
+
+class LoggingMiddleware(BaseHTTPMiddleware):
+
+    async def dispatch(self, request: Request, call_next):
+
+        start_time = time.time()
+
+        logger.info(f"{request.method} {request.url.path}")
+
+        
+
+        try:
+
+            response = await call_next(request)
+
+            process_time = time.time() - start_time
+
+            response.headers["X-Process-Time"] = str(process_time)
+
+            logger.info(f"✅ {request.method} {request.url.path} - {response.status_code} ({process_time:.2f}s)")
+
+            return response
+
+        except Exception as e:
+
+            process_time = time.time() - start_time
+
+            logger.error(f"❌ {request.method} {request.url.path} - Error: {str(e)} ({process_time:.2f}s)")
+
+            raise
+
+
+
+# FastAPI app initialization
+
+app = FastAPI(
+
+    title="Lumina Receipt OCR API - Public Demo",
+
+    description="AI-powered receipt processing - Public Demo Mode (No Auth Required)",
+
+    version="2.1.0",
+
+    debug=True
+
+)
+
+
+
+# Create a router with the /api prefix
+
+api_router = APIRouter(prefix="/api")
+
+
+
+# Create uploads directory
+
+UPLOADS_DIR = Path("uploads")
+
+UPLOADS_DIR.mkdir(exist_ok=True)
+
+
+
+# Mount static files
+
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
+
+
+# CONSTANT: Public demo user ID
+
+PUBLIC_DEMO_USER_ID = "public-demo-user"
+
+
+
+# Pydantic Models
+
+class ReceiptItem(BaseModel):
+
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+
+    description: str
+
+    amount: Optional[str] = None
+
+    confidence: Optional[float] = None
+
+    
+
+class Receipt(BaseModel):
+
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+
+    user_id: str
+
+    filename: str
+
+    original_file_path: Optional[str] = None
+
+    upload_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+    merchant_name: Optional[str] = None
+
+    receipt_date: Optional[str] = None
+
+    total_amount: Optional[str] = None
+
+    category: str = "Uncategorized"
+
+    items: List[ReceiptItem] = []
+
+    raw_text: str = ""
+
+    processing_status: str = "pending"
+
+    confidence_score: Optional[float] = None
+
+    category_confidence: Optional[float] = None
+
+    categorization_method: Optional[str] = None
+
+
+
+class CategoryUpdate(BaseModel):
+
+    category: str
+
+
+
+class ExportFilters(BaseModel):
+
+    start_date: Optional[str] = None
+
+    end_date: Optional[str] = None
+
+    categories: Optional[List[str]] = None
+
+
+
+# OCR Processor (simplified version)
+
+class ReceiptOCRProcessor:
+
+    def __init__(self):
+
+        self.reader = None
+
+        self.initialize_reader()
+
+        self.transaction_processor = TransactionProcessor()
+
+        logger.info("✅ Initialized transaction processor")
+
+    
+
+    def initialize_reader(self):
+
+        try:
+
+            import easyocr
+
+            try:
+
+                self.reader = easyocr.Reader(['en'], gpu=True)
+
+                logger.info("✅ EasyOCR initialized with GPU")
+
+            except:
+
+                self.reader = easyocr.Reader(['en'], gpu=False)
+
+                logger.info("✅ EasyOCR initialized with CPU")
+
+        except Exception as e:
+
+            logger.error(f"❌ EasyOCR initialization failed: {str(e)}")
+
+            self.reader = None
+
+    
+
+    async def convert_pdf_to_images(self, pdf_path: str) -> List[str]:
+
+        try:
+
+            images = convert_from_path(pdf_path)
+
+            image_paths = []
+
+            for i, image in enumerate(images):
+
+                temp_path = f"{pdf_path}_page_{i}.png"
+
+                image.save(temp_path, 'PNG')
+
+                image_paths.append(temp_path)
+
+            return image_paths
+
+        except Exception as e:
+
+            logger.error(f"PDF conversion error: {str(e)}")
+
+            return []
+
+    
+
+    async def process_receipt_file(self, file_path: str, is_pdf: bool = False) -> Dict[str, Any]:
+
+        """Main OCR + Parsing pipeline"""
+
+
+
+        if not self.reader:
+
+            return {"success": False, "error": "OCR reader not initialized"}
+
+
+
+        try:
+
+            # PDF → images
+
+            if is_pdf:
+
+                image_paths = await self.convert_pdf_to_images(file_path)
+
+            else:
+
+                image_paths = [file_path]
+
+
+
+            all_results = []
+
+
+
+            # Run OCR on each image
+
+
+            for img_path in image_paths:
+
+                try:
+
+                    import cv2
+
+                    test_image = cv2.imread(img_path)
+
+                    if test_image is None:
+
+                        continue
+
+
+
+                    loop = asyncio.get_event_loop()
+
+                    results = await loop.run_in_executor(
+
+                        None, lambda: self.reader.readtext(img_path, detail=1, paragraph=False)
+
+                    )
+
+                    all_results.extend(results)
+
+
+
+                except Exception as e:
+
+                    logger.error(f"OCR image process error: {e}")
+
+                    continue
+
+
+
+            # ----------------------------------------
+
+            # CLEAN OUTPUT → Convert everything to strings
+
+            # ----------------------------------------
+
+
+
+            raw_text = ' '.join([r[1] for r in all_results if r[2] > 0.2])
+
+            cleaned_text = clean_ocr_text(raw_text)
+
+            parsed = parse_receipt(cleaned_text)
+
+
+
+            def safe_str(v):
+
+                if v is None:
+
+                    return None
+
+                try:
+
+                    return f"{float(v):.2f}"
+
+                except:
+
+                    return str(v)
+
+
+
+            transaction_data = self.transaction_processor.process_transaction(cleaned_text)
+
+            category = transaction_data.get("category", "Uncategorized")
+
+            cat_conf = transaction_data.get("confidence", 0.0)
+
+
+
+            return {
+
+                "success": True,
+
+                "raw_text": raw_text,
+
+                "merchant_name": parsed.merchant,
+
+                "receipt_date": parsed.receipt_date,
+
+                "total_amount": safe_str(parsed.total_amount),
+
+                "subtotal": safe_str(parsed.subtotal),
+
+                "tax": safe_str(parsed.tax),
+
+                "service_charge": safe_str(parsed.service_charge),
+
+                "suggested_category": category,
+
+                "category_confidence": cat_conf,
+
+                "categorization_method": "ai_parser+transaction_ml",
+
+                "confidence_score": 0.80
+
+            }
+
+
+        except Exception as e:
+
+            logger.error(f"OCR processing error: {e}")
+
+            return {"success": False, "error": str(e)}
+
+
+
+
+# Initialize OCR processor
+
+ocr_processor = ReceiptOCRProcessor()
+
+
+
+# Helper functions
+
+async def save_uploaded_file_permanently(upload_file: UploadFile, receipt_id: str) -> str:
+
+    try:
+
+        file_extension = Path(upload_file.filename).suffix.lower()
+
+        if file_extension not in ['.jpg', '.jpeg', '.png', '.pdf', '.tiff', '.bmp']:
+
+            raise HTTPException(status_code=400, detail="Unsupported file format")
+
+        
+
+        safe_filename = f"{receipt_id}_{upload_file.filename}"
+
+        file_path = UPLOADS_DIR / safe_filename
+
+        
+
+        async with aiofiles.open(file_path, 'wb') as buffer:
+
+            content = await upload_file.read()
+
+            await buffer.write(content)
+
+        
+
+        return str(file_path)
+
+    except Exception as e:
+
+        logger.error(f"File save error: {str(e)}")
+
+        raise HTTPException(status_code=500, detail="Failed to save file")
+
+
+
+def prepare_for_mongo(data: dict) -> dict:
+
+    if isinstance(data.get('upload_date'), datetime):
+
+        data['upload_date'] = data['upload_date'].isoformat()
+
+    return data
+
+
+
+def parse_from_mongo(item: dict) -> dict:
+
+    if isinstance(item.get('upload_date'), str):
+
+        try:
+
+            item['upload_date'] = datetime.fromisoformat(item['upload_date'])
+
+        except:
+
+            item['upload_date'] = datetime.now(timezone.utc)
+
+    return item
+
+
+
+# API Routes - ALL WITHOUT AUTH
+
+@api_router.get("/")
+
+async def root():
+
+    return {
+
+        "message": "Lumina Receipt OCR API - Public Demo Mode",
+
+        "version": "2.1.0",
+
+        "status": "operational",
+
+        "auth_required": False
+
+    }
+
+
+
+@api_router.post("/receipts/upload", response_model=Receipt)
+
+async def upload_receipt(
+
+    file: UploadFile = File(...),
+
+    category: str = "Auto-Detect"
+
+):
+
+    """Upload and process a receipt - NO AUTH REQUIRED"""
+
+    logger.info(f" Upload started: {file.filename}")
+
+    
+
+    try:
+
+        if not file.filename:
+
+            raise HTTPException(status_code=400, detail="No file provided")
+
+        
+
+        file_extension = Path(file.filename).suffix.lower()
+
+        is_pdf = file_extension == '.pdf'
+
+        
+
+        receipt_id = str(uuid.uuid4())
+
+        
+
+        # Save file
+
+        permanent_file_path = await save_uploaded_file_permanently(file, receipt_id)
+
+        
+
+        # Create receipt record with PUBLIC_DEMO_USER_ID
+
+        receipt_data = {
+
+            "id": receipt_id,
+
+            "user_id": PUBLIC_DEMO_USER_ID,  # ✅ Hardcoded public user
+
+            "filename": file.filename,
+
+            "original_file_path": permanent_file_path,
+
+            "upload_date": datetime.now(timezone.utc),
+
+            "category": category,
+
+            "processing_status": "processing",
+
+            "raw_text": "",
+
+            "merchant_name": None,
+
+            "receipt_date": None,
+
+            "total_amount": None,
+
+            "items": [],
+
+            "confidence_score": 0.0
+
+        }
+
+        
+
+        # Insert into DB
+
+        receipt_dict = prepare_for_mongo(receipt_data.copy())
+
+        await db.receipts.insert_one(receipt_dict)
+
+        
+
+        # Process OCR
+
+        ocr_result = await ocr_processor.process_receipt_file(permanent_file_path, is_pdf)
+
+        
+
+        # Update with OCR results
+
+        if ocr_result.get('success'):
+
+            final_category = category
+
+            if category == "Auto-Detect":
+
+                final_category = ocr_result.get('suggested_category', 'Uncategorized')
+
+            
+
+            update_data = {
+
+                "processing_status": "completed",
+
+                "category": final_category,
+
+                "raw_text": ocr_result.get('raw_text', ''),
+
+                "merchant_name": ocr_result.get('merchant_name'),
+
+                "receipt_date": ocr_result.get('receipt_date'),
+
+                "total_amount": ocr_result.get('total_amount'),
+
+                "confidence_score": ocr_result.get('confidence_score', 0.0),
+
+                "items": [],
+
+                "category_confidence": ocr_result.get('category_confidence', 0.0),
+
+                "categorization_method": ocr_result.get('categorization_method', 'unknown')
+
+            }
+
+        else:
+
+            update_data = {
+
+                "processing_status": "failed",
+
+                "raw_text": f"Error: {ocr_result.get('error', 'Unknown error')}"
+
+            }
+
+        
+
+        await db.receipts.update_one(
+
+            {"id": receipt_data["id"]},
+
+            {"$set": update_data}
+
+        )
+
+        
+
+        receipt_data.update(update_data)
+
+        logger.info(f"✅ Upload completed: {file.filename}")
+
+        return Receipt(**receipt_data)
+
+        
+
+    except HTTPException:
+
+        raise
+
+    except Exception as e:
+
+        logger.error(f"❌ Upload error: {str(e)}\n{traceback.format_exc()}")
+
+        raise HTTPException(status_code=500, detail=f"Failed to process receipt: {str(e)}")
+
+
+
+@api_router.get("/receipts", response_model=List[Receipt])
+
+async def get_receipts(
+
+    skip: int = 0,
+
+    limit: int = 100,
+
+    search: Optional[str] = Query(None),
+
+    category: Optional[str] = Query(None)
+
+):
+
+    """Get all receipts - NO AUTH REQUIRED"""
+
+    try:
+
+        # Query with PUBLIC_DEMO_USER_ID
+
+        query = {"user_id": PUBLIC_DEMO_USER_ID}
+
+        
+
+        if search:
+
+            query["$or"] = [
+
+                {"merchant_name": {"$regex": search, "$options": "i"}},
+
+                {"filename": {"$regex": search, "$options": "i"}},
+
+                {"raw_text": {"$regex": search, "$options": "i"}}
+
+            ]
+
+        
+
+        if category and category != "All":
+
+            query["category"] = category
+
+        
+
+        receipts = await db.receipts.find(query).skip(skip).limit(limit).sort("upload_date", -1).to_list(length=None)
+
+        logger.info(f" Retrieved {len(receipts)} receipts")
+
+        return [Receipt(**parse_from_mongo(r)) for r in receipts]
+
+    except Exception as e:
+
+        logger.error(f"❌ Get receipts error: {str(e)}")
+
+        # Return empty list instead of 500 error
+
+        return []
+
+
+
+@api_router.get("/receipts/{receipt_id}", response_model=Receipt)
+
+async def get_receipt(receipt_id: str):
+
+    """Get a specific receipt - NO AUTH REQUIRED"""
+
+    try:
+
+        receipt = await db.receipts.find_one({"id": receipt_id, "user_id": PUBLIC_DEMO_USER_ID})
+
+        if not receipt:
+
+            raise HTTPException(status_code=404, detail="Receipt not found")
+
+        return Receipt(**parse_from_mongo(receipt))
+
+    except HTTPException:
+
+        raise
+
+    except Exception as e:
+
+        logger.error(f"❌ Get receipt error: {str(e)}")
+
+        raise HTTPException(status_code=500, detail="Failed to retrieve receipt")
+
+
+
+@api_router.get("/receipts/{receipt_id}/file")
+
+async def get_receipt_file(receipt_id: str):
+
+    """Get the original receipt file - NO AUTH REQUIRED"""
+
+    try:
+
+        receipt = await db.receipts.find_one({"id": receipt_id, "user_id": PUBLIC_DEMO_USER_ID})
+
+        if not receipt:
+
+            raise HTTPException(status_code=404, detail="Receipt not found")
+
+        
+
+        file_path = receipt.get('original_file_path')
+
+        if not file_path or not os.path.exists(file_path):
+
+            raise HTTPException(status_code=404, detail="Original file not found")
+
+        
+
+        return FileResponse(
+
+            file_path,
+
+            filename=receipt.get('filename', 'receipt'),
+
+            media_type='application/octet-stream'
+
+        )
+
+    except HTTPException:
+
+        raise
+
+    except Exception as e:
+
+        logger.error(f"❌ Get file error: {str(e)}")
+
+        raise HTTPException(status_code=500, detail="Failed to retrieve file")
+
+
+
+@api_router.put("/receipts/{receipt_id}/category")
+
+async def update_receipt_category(receipt_id: str, category_update: CategoryUpdate):
+
+    """Update receipt category - NO AUTH REQUIRED"""
+
+    try:
+
+        result = await db.receipts.update_one(
+
+            {"id": receipt_id, "user_id": PUBLIC_DEMO_USER_ID},
+
+            {"$set": {"category": category_update.category}}
+
+        )
+
+        
+
+        if result.matched_count == 0:
+
+            raise HTTPException(status_code=404, detail="Receipt not found")
+
+        
+
+        logger.info(f"✅ Category updated for receipt {receipt_id}")
+
+        return {"message": "Category updated successfully"}
+
+    except HTTPException:
+
+        raise
+
+    except Exception as e:
+
+        logger.error(f"❌ Update category error: {str(e)}")
+
+        raise HTTPException(status_code=500, detail="Failed to update category")
+
+
+
+@api_router.delete("/receipts/{receipt_id}")
+
+async def delete_receipt(receipt_id: str):
+
+    """Delete a receipt - NO AUTH REQUIRED"""
+
+    try:
+
+        receipt = await db.receipts.find_one({"id": receipt_id, "user_id": PUBLIC_DEMO_USER_ID})
+
+        if not receipt:
+
+            raise HTTPException(status_code=404, detail="Receipt not found")
+
+        
+
+        result = await db.receipts.delete_one({"id": receipt_id, "user_id": PUBLIC_DEMO_USER_ID})
+
+        if result.deleted_count == 0:
+
+            raise HTTPException(status_code=404, detail="Receipt not found")
+
+        
+
+        file_path = receipt.get('original_file_path')
+
+        if file_path and os.path.exists(file_path):
+
+            try:
+
+                os.remove(file_path)
+
+            except Exception as e:
+
+                logger.warning(f"Could not delete file: {str(e)}")
+
+        
+
+        logger.info(f"✅ Deleted receipt {receipt_id}")
+
+        return {"message": "Receipt deleted successfully"}
+
+    except HTTPException:
+
+        raise
+
+    except Exception as e:
+
+        logger.error(f"❌ Delete error: {str(e)}")
+
+        raise HTTPException(status_code=500, detail="Failed to delete receipt")
+
+
+
+@api_router.post("/receipts/export/csv")
+
+async def export_receipts_csv(filters: Optional[ExportFilters] = None):
+
+    """Export receipts as CSV - NO AUTH REQUIRED"""
+
+    try:
+
+        query = {"user_id": PUBLIC_DEMO_USER_ID}
+
+        
+
+        if filters:
+
+            if filters.start_date or filters.end_date:
+
+                date_query = {}
+
+                if filters.start_date:
+
+                    date_query["$gte"] = filters.start_date
+
+                if filters.end_date:
+
+                    date_query["$lte"] = filters.end_date
+
+                query["upload_date"] = date_query
+
+            
+
+            if filters.categories:
+
+                query["category"] = {"$in": filters.categories}
+
+        
+
+        receipts = await db.receipts.find(query).sort("upload_date", -1).to_list(length=None)
+
+        
+
+        output = io.StringIO()
+
+        writer = csv.writer(output)
+
+        
+
+        writer.writerow(['Lumina Receipt Export'])
+
+        writer.writerow(['Generated:', datetime.now().strftime('%Y-%m-%d %H:%M:%S')])
+
+        writer.writerow([])
+
+        
+
+        # Calculate totals
+
+        category_totals = {}
+
+        grand_total = 0.0
+
+        
+
+        for receipt in receipts:
+
+            category = receipt.get('category', 'Uncategorized')
+
+            amount_str = receipt.get('total_amount', '0')
+
+            try:
+
+                amount = float(re.sub(r'[^\d.]', '', amount_str)) if amount_str else 0.0
+
+            except:
+
+                amount = 0.0
+
+            
+
+            category_totals[category] = category_totals.get(category, 0.0) + amount
+
+            grand_total += amount
+
+        
+
+        writer.writerow(['SUMMARY BY CATEGORY'])
+
+        writer.writerow(['Category', 'Total', 'Count'])
+
+        for category, total in sorted(category_totals.items()):
+
+            count = len([r for r in receipts if r.get('category') == category])
+
+            writer.writerow([category, f'${total:.2f}', count])
+
+        
+
+        writer.writerow(['TOTAL', f'${grand_total:.2f}', len(receipts)])
+
+        writer.writerow([])
+
+        
+
+        writer.writerow(['DETAILED TRANSACTIONS'])
+
+        writer.writerow(['Date', 'Merchant', 'Category', 'Amount', 'Filename', 'Status'])
+
+        
+
+        for receipt in receipts:
+
+            writer.writerow([
+
+                receipt.get('receipt_date', receipt.get('upload_date', '')),
+
+                receipt.get('merchant_name', ''),
+
+                receipt.get('category', ''),
+
+                receipt.get('total_amount', ''),
+
+                receipt.get('filename', ''),
+
+                receipt.get('processing_status', '')
+
+            ])
+
+        
+
+        output.seek(0)
+
+        
+
+        logger.info(f"✅ CSV export generated: {len(receipts)} receipts")
+
+        return StreamingResponse(
+
+            io.BytesIO(output.getvalue().encode('utf-8')),
+
+            media_type='text/csv',
+
+            headers={'Content-Disposition': 'attachment; filename="lumina_export.csv"'}
+
+        )
+
+        
+
+    except Exception as e:
+
+        logger.error(f"❌ CSV export error: {str(e)}")
+
+        raise HTTPException(status_code=500, detail="Failed to export receipts")
+
+
+
+@api_router.get("/categories")
+
+async def get_categories():
+
+    """Get all categories - NO AUTH REQUIRED"""
+
+    try:
+
+        pipeline = [
+
+            {"$match": {"user_id": PUBLIC_DEMO_USER_ID}},
+
+            {"$group": {"_id": "$category", "count": {"$sum": 1}}},
+
+            {"$sort": {"count": -1}}
+
+        ]
+
+        categories = await db.receipts.aggregate(pipeline).to_list(length=None)
+
+        
+
+        result = []
+
+        for cat in categories:
+
+            result.append({
+
+                "name": cat["_id"] if cat["_id"] else "Uncategorized",
+
+                "count": cat["count"],
+
+                "total_amount": 0.0
+
+            })
+
+        
+
+        logger.info(f" Retrieved {len(result)} categories")
+
+        return {"categories": result}
+
+    except Exception as e:
+
+        logger.error(f"❌ Get categories error: {str(e)}")
+
+        return {"categories": []}
+
+
+
+@api_router.get("/health")
+
+async def health_check():
+
+    """Health check endpoint"""
+
+    try:
+
+        await db.command("ping")
+
+        db_status = "healthy"
+
+    except:
+
+        db_status = "unhealthy"
+
+    
+
+    return {
+
+        "status": "ok" if db_status == "healthy" else "degraded",
+
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+
+        "version": "2.1.0",
+
+        "mode": "public-demo",
+
+        "auth_required": False,
+
+        "database": db_status
+
+    }
+
+
+
+# Include router
+
+app.include_router(api_router)
+
+
+
+# Add logging middleware
+
+app.add_middleware(LoggingMiddleware)
+
+
+
+# ✅ FIX: CORS with wildcard - allow ALL origins
+
+app.add_middleware(
+
+    CORSMiddleware,
+
+    allow_origins=["*"],  # Allow all origins
+
+    allow_credentials=True,
+
+    allow_methods=["*"],  # Allow all methods
+
+    allow_headers=["*"],  # Allow all headers
+
+)
+
+
+
+logger.info("CORS configured: allow_origins=['*']")
+
+
+
+# Global exception handlers
+
+@app.exception_handler(RequestValidationError)
+
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+
+    logger.warning(f"Validation error: {exc.errors()}")
+
+    return JSONResponse(
+
+        status_code=422,
+
+        content={
+
+            "error": "Validation error",
+
+            "details": exc.errors()
+
+        }
+
+    )
+
+
+
+@app.exception_handler(HTTPException)
+
+async def http_exception_handler_custom(request: Request, exc: HTTPException):
+
+    logger.error(f"HTTP exception: {exc.status_code} - {exc.detail}")
+
+    return JSONResponse(
+
+        status_code=exc.status_code,
+
+        content={
+
+            "error": f"HTTP {exc.status_code}",
+
+            "message": exc.detail if isinstance(exc.detail, str) else str(exc.detail)
+
+        }
+
+    )
+
+
+
+@app.exception_handler(500)
+
+async def internal_server_error_handler(request: Request, exc: Exception):
+
+    error_id = str(uuid.uuid4())
+
+    logger.error(f"Internal error [{error_id}]: {str(exc)}\n{traceback.format_exc()}")
+
+    return JSONResponse(
+
+        status_code=500,
+
+        content={
+
+            "error": "Internal server error",
+
+            "message": "An unexpected error occurred",
+
+            "error_id": error_id
+
+        }
+
+    )
+
+
+
+@app.on_event("shutdown")
+
+async def shutdown_db_client():
+
+    client.close()
+
+    logger.info(" MongoDB connection closed")
+
+
+
+if __name__ == "__main__":
+
+    import uvicorn
+
+    logger.info(" Starting Lumina in PUBLIC DEMO MODE (No Auth Required)")
+
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
+
+
+

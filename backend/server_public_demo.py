@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
+""" 
+LUMINA - PUBLIC DEMO MODE 
+This version runs without authentication for demo purposes 
 """
-LUMINA - PUBLIC DEMO MODE
-This version runs without authentication for demo purposes
-"""
-
 from fastapi import FastAPI, APIRouter, UploadFile, File, HTTPException, BackgroundTasks, Query, Request, Response, status
 from fastapi.responses import StreamingResponse, FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -27,6 +26,10 @@ import csv
 import re
 import traceback
 from pdf2image import convert_from_path
+from PIL import Image, ImageOps
+import pillow_heif
+pillow_heif.register_heif_opener()
+
 
 # Import the transaction processor
 import sys
@@ -247,9 +250,31 @@ async def save_uploaded_file_permanently(upload_file: UploadFile, receipt_id: st
         safe_filename = f"{receipt_id}_{upload_file.filename}"
         file_path = UPLOADS_DIR / safe_filename
         
-        async with aiofiles.open(file_path, 'wb') as buffer:
-            content = await upload_file.read()
-            await buffer.write(content)
+ # Read raw file bytes
+        raw_bytes = await upload_file.read()
+
+        # If PDF — save directly (no image processing needed)
+        if file_extension == '.pdf':
+            async with aiofiles.open(file_path, 'wb') as buffer:
+                await buffer.write(raw_bytes)
+            return str(file_path)
+
+        # Open the image (now supports HEIC)
+        image = Image.open(BytesIO(raw_bytes))
+
+        # 🔥 FIX 1 — auto rotate based on EXIF (phone photos)
+        image = ImageOps.exif_transpose(image)
+
+        # 🔥 FIX 2 — ensure RGB (HEIC & PNG fix)
+        if image.mode in ("RGBA", "P"):
+            image = image.convert("RGB")
+
+        # 🔥 FIX 3 — downscale huge mobile photos
+        MAX_SIZE = (2000, 2000)
+        image.thumbnail(MAX_SIZE, Image.LANCZOS)
+
+        # Save normalized image
+        image.save(file_path, format="JPEG", quality=90)
         
         return str(file_path)
     except Exception as e:

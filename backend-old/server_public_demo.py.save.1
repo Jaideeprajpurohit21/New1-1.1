@@ -1,0 +1,658 @@
+
+
+
+#!/usr/bin/env python3
+"""
+LUMINA - PUBLIC DEMO MODE
+This version runs without authentication for demo purposes
+"""
+
+#!/usr/bin/env python3
+
+"""
+
+LUMINA - PUBLIC DEMO MODE
+
+Tesseract-OCR Version (EasyOCR Removed)
+
+"""
+
+
+
+from fastapi import FastAPI, APIRouter, UploadFile, File, HTTPException, BackgroundTasks, Query, Request, Response, status
+
+from fastapi.responses import StreamingResponse, FileResponse, JSONResponse
+
+from fastapi.staticfiles import StaticFiles
+
+from fastapi.exceptions import RequestValidationError
+
+from dotenv import load_dotenv
+
+from starlette.middleware.cors import CORSMiddleware
+
+from starlette.middleware.base import BaseHTTPMiddleware
+
+from motor.motor_asyncio import AsyncIOMotorClient
+
+import os
+
+import logging
+
+import time
+
+from pathlib import Path
+import sys
+
+sys.path.append("..")
+
+from transaction_processor import TransactionProcessor
+
+from pydantic import BaseModel, Field
+
+from typing import List, Optional, Dict, Any
+
+import uuid
+
+from datetime import datetime, timezone
+
+import asyncio
+
+import aiofiles
+
+import io
+
+import csv
+
+import re
+
+import traceback
+
+
+
+# NEW OCR IMPORTS (Tesseract + OpenCV)
+
+import cv2
+
+import pytesseract
+
+
+
+# Load .env
+
+ROOT_DIR = Path(__file__).parent
+
+load_dotenv(ROOT_DIR / '.env')
+
+
+
+# Logging
+
+logging.basicConfig(level=logging.INFO)
+
+logger = logging.getLogger(__name__)
+
+
+
+# MongoDB
+
+MONGO_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
+
+DB_NAME = os.getenv("DB_NAME", "lumina_development")
+
+client = AsyncIOMotorClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+
+db = client[DB_NAME]
+
+
+
+# Logging Middleware
+
+class LoggingMiddleware(BaseHTTPMiddleware):
+
+    async def dispatch(self, request: Request, call_next):
+
+        start = time.time()
+
+        logger.info(f"{request.method} {request.url.path}")
+
+
+
+        try:
+
+            response = await call_next(request)
+
+            elapsed = time.time() - start
+
+            response.headers["X-Process-Time"] = str(elapsed)
+
+            logger.info(f"{request.method} {request.url.path} -> {response.status_code} ({elapsed:.2f}s)")
+
+            return response
+
+        except Exception as e:
+
+            elapsed = time.time() - start
+
+            logger.error(f"ERROR {request.method} {request.url.path}: {str(e)} ({elapsed:.2f}s)")
+
+            raise
+
+
+
+
+
+# FASTAPI APP
+
+app = FastAPI(
+
+    title="Lumina Receipt OCR API - Public Demo (Tesseract)",
+
+    version="2.1.0",
+
+    debug=True
+
+)
+
+
+
+api_router = APIRouter(prefix="/api")
+
+
+
+UPLOADS_DIR = Path("uploads")
+
+UPLOADS_DIR.mkdir(exist_ok=True)
+
+
+
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
+
+
+PUBLIC_DEMO_USER_ID = "public-demo-user"
+
+
+
+# -----------------------------
+
+# MODELS
+
+# -----------------------------
+
+
+
+class ReceiptItem(BaseModel):
+
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+
+    description: str
+
+    amount: Optional[str] = None
+
+    confidence: Optional[float] = None
+
+
+
+class Receipt(BaseModel):
+
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+
+    user_id: Optional[str]
+
+    filename: str
+
+    original_file_path: Optional[str] = None
+
+    upload_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+    merchant_name: Optional[str] = None
+
+    receipt_date: Optional[str] = None
+
+    total_amount: Optional[str] = None
+
+    category: Optional[str] = ""
+
+    items: List[ReceiptItem] = []
+
+    raw_text: Optional[str] = ""
+
+    processing_status: str = "pending"
+
+    confidence_score: Optional[float] = None
+
+    category_confidence: Optional[float] = None
+
+    categorization_method: Optional[str] = None
+
+
+
+class CategoryUpdate(BaseModel):
+
+    category: str
+
+
+
+class ExportFilters(BaseModel):
+
+    start_date: Optional[str] = None
+
+    end_date: Optional[str] = None
+
+    categories: Optional[List[str]] = None
+
+
+
+# -----------------------------
+
+# NEW OCR ENGINE (TESSERACT)
+
+# -----------------------------
+
+
+
+def preprocess_image(image_path):
+
+    img = cv2.imread(image_path)
+
+    if img is None:
+
+        return None
+
+
+
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    gray = cv2.bilateralFilter(gray, 11, 17, 17)
+
+
+
+    thresh = cv2.adaptiveThreshold(
+
+        gray, 255,
+
+        cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+
+        cv2.THRESH_BINARY,
+
+        11, 2
+
+    )
+
+
+
+    return thresh
+
+
+
+def run_ocr(image_path):
+
+    processed = preprocess_image(image_path)
+
+    if processed is None:
+
+        return ""
+
+    text = pytesseract.image_to_string(processed)
+
+    return text
+
+
+
+# -----------------------------
+
+# TRANSACTION PROCESSOR
+
+# -----------------------------
+
+
+
+from transaction_processor import TransactionProcessor
+
+ocr_processor = None  # We don't need a GPU heavy reader anymore
+
+transaction_processor = TransactionProcessor()
+
+
+
+# -----------------------------
+
+# FILE HELPERS
+
+# -----------------------------
+
+
+
+async def save_uploaded_file_permanently(upload_file: UploadFile, receipt_id: str) -> str:
+
+    file_extension = Path(upload_file.filename).suffix.lower()
+
+
+
+    if file_extension not in ['.jpg', '.jpeg', '.png', '.pdf', '.tiff', '.bmp']:
+
+        raise HTTPException(status_code=400, detail="Unsupported file format")
+
+
+
+    safe_filename = f"{receipt_id}_{upload_file.filename}"
+
+    file_path = UPLOADS_DIR / safe_filename
+
+
+
+    async with aiofiles.open(file_path, 'wb') as buffer:
+
+        await buffer.write(await upload_file.read())
+
+
+
+    return str(file_path)
+
+
+
+def prepare_for_mongo(data: dict) -> dict:
+
+    if isinstance(data.get('upload_date'), datetime):
+
+        data['upload_date'] = data['upload_date'].isoformat()
+
+    return data
+
+
+
+def parse_from_mongo(item: dict) -> dict:
+
+    if isinstance(item.get('upload_date'), str):
+
+        try:
+
+            item['upload_date'] = datetime.fromisoformat(item['upload_date'])
+
+        except:
+
+            item['upload_date'] = datetime.now(timezone.utc)
+
+    return item
+
+
+
+# -----------------------------
+
+# OCR RECEIPT PROCESSOR
+
+# -----------------------------
+
+
+
+async def process_receipt_file(path: str, is_pdf: bool = False) -> dict:
+
+    try:
+
+        full_text = run_ocr(path)
+
+
+
+        logger.info("OCR TEXT (first 200 chars):")
+
+        logger.info(full_text[:200])
+
+
+
+        parsed = transaction_processor.process_transaction(full_text)
+
+        parsed["raw_text"] = full_text
+
+        parsed["success"] = True
+
+        return parsed
+
+
+
+    except Exception as e:
+
+        logger.error(f"OCR processing error: {str(e)}")
+
+        return {
+
+            "success": False,
+
+            "error": str(e)
+
+        }
+
+
+
+# -----------------------------
+
+# API ROUTES
+
+# -----------------------------
+
+
+
+@api_router.get("/")
+
+async def root():
+
+    return {"message": "Lumina API (Tesseract OCR)", "version": "2.1.0"}
+
+
+
+@api_router.post("/receipts/upload", response_model=Receipt)
+
+async def upload_receipt(file: UploadFile = File(...), category: str = "Auto-Detect"):
+
+
+
+    logger.info(f"UPLOAD: {file.filename}")
+
+
+
+    receipt_id = str(uuid.uuid4())
+
+    file_path = await save_uploaded_file_permanently(file, receipt_id)
+
+
+
+    receipt_data = {
+
+        "id": receipt_id,
+
+        "user_id": PUBLIC_DEMO_USER_ID,
+
+        "filename": file.filename,
+
+        "original_file_path": file_path,
+
+        "upload_date": datetime.now(timezone.utc),
+
+        "category": category,
+
+        "processing_status": "processing",
+
+        "raw_text": "",
+
+        "merchant_name": None,
+
+        "receipt_date": None,
+
+        "total_amount": None,
+
+        "items": [],
+
+        "confidence_score": 0.0
+
+    }
+
+
+
+    db_record = prepare_for_mongo(receipt_data.copy())
+
+    await db.receipts.insert_one(db_record)
+
+
+
+    ocr_result = await process_receipt_file(file_path)
+
+
+
+    update_data = {
+
+        "processing_status": "completed",
+
+        "raw_text": ocr_result.get("raw_text"),
+
+        "merchant_name": ocr_result.get("merchant"),
+
+        "receipt_date": ocr_result.get("date"),
+
+        "total_amount": ocr_result.get("amount"),
+
+        "category": ocr_result.get("category"),
+
+        "confidence_score": ocr_result.get("confidence"),
+
+        "items": []
+
+    }
+
+
+
+    await db.receipts.update_one({"id": receipt_id}, {"$set": update_data})
+
+
+
+    receipt_data.update(update_data)
+
+    return Receipt(**receipt_data)
+
+
+
+@api_router.get("/receipts", response_model=List[Receipt])
+
+async def get_receipts(skip: int = 0, limit: int = 100):
+
+    receipts = await db.receipts.find({"user_id": PUBLIC_DEMO_USER_ID}).skip(skip).limit(limit).sort("upload_date", -1).to_list(None)
+
+    return [Receipt(**parse_from_mongo(r)) for r in receipts]
+
+
+
+@api_router.get("/receipts/{receipt_id}", response_model=Receipt)
+
+async def get_receipt(receipt_id: str):
+
+    receipt = await db.receipts.find_one({"id": receipt_id})
+
+    if not receipt:
+
+        raise HTTPException(status_code=404, detail="Not found")
+
+    return Receipt(**parse_from_mongo(receipt))
+
+
+
+@api_router.get("/receipts/{receipt_id}/file")
+
+async def get_receipt_file(receipt_id: str):
+
+    receipt = await db.receipts.find_one({"id": receipt_id})
+
+    if not receipt:
+
+        raise HTTPException(status_code=404, detail="Not found")
+
+
+
+    file_path = receipt.get("original_file_path")
+
+    if not os.path.exists(file_path):
+
+        raise HTTPException(status_code=404, detail="File not found")
+
+
+
+    return FileResponse(file_path)
+
+
+
+@api_router.get("/health")
+
+async def health():
+
+    try:
+
+        await db.command("ping")
+
+        db_status = "healthy"
+
+    except:
+
+        db_status = "unhealthy"
+
+
+
+    return {
+
+        "status": "ok" if db_status == "healthy" else "degraded",
+
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+
+        "version": "2.1.0",
+
+        "mode": "public-demo",
+
+        "database": db_status
+
+    }
+
+
+
+app.include_router(api_router)
+
+
+
+# CORS
+
+app.add_middleware(
+
+    CORSMiddleware,
+
+    allow_origins=["*"],
+
+    allow_methods=["*"],
+
+    allow_headers=["*"],
+
+)
+
+
+
+# ERROR HANDLERS
+
+@app.exception_handler(RequestValidationError)
+
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+
+    return JSONResponse(status_code=422, content={"error": "Validation error", "details": exc.errors()})
+
+
+
+@app.exception_handler(HTTPException)
+
+async def http_exception_handler(request: Request, exc: HTTPException):
+
+    return JSONResponse(status_code=exc.status_code, content={"error": str(exc.detail)})
+
+
+
+@app.on_event("shutdown")
+
+async def shutdown_db_client():
+
+    client.close()
+
+
+

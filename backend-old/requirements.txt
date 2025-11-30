@@ -1,0 +1,54 @@
+
+# LUMINA - AI-POWERED RECEIPT MANAGEMENT SYSTEM
+# Backend Python Dependencies
+# 
+# Copyright (c) 2024 Jaideep Singh Rajpurohit. All rights reserved.
+# PROPRIETARY SOFTWARE - UNAUTHORIZED USE PROHIBITED
+
+# LUMINA - AI-POWERED RECEIPT MANAGEMENT SYSTEM
+# Backend Python Dependencies
+# 
+# Copyright (c) 2024 Jaideep Singh Rajpurohit. All rights reserved.
+# PROPRIETARY SOFTWARE - UNAUTHORIZED USE PROHIBITED
+
+# Core FastAPI and server dependencies
+fastapi>=0.110.1
+uvicorn[standard]>=0.25.0
+gunicorn>=21.2.0
+
+# Database
+motor>=3.3.1
+pymongo>=4.6.0
+
+# Authentication
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+
+# File handling and OCR
+python-multipart>=0.0.6
+aiofiles>=23.2.1
+easyocr>=1.7.0
+opencv-python-headless>=4.8.0
+Pillow>=10.3.0
+pdf2image>=1.17.0
+
+# Machine Learning - DISABLED FOR DEPLOYMENT
+# scikit-learn>=1.4.0
+# pandas>=2.2.0
+# numpy>=1.26.0
+# joblib>=1.3.0
+# Note: ML features disabled due to Emergent resource limits (250m CPU, 1Gi memory)
+# Using rule-based categorization instead
+
+# Configuration and utilities
+pydantic[email]>=2.0.0
+python-dotenv>=1.0.0
+pydantic-settings>=2.0.0
+aiohttp>=3.8.0
+
+# File validation and security
+python-magic>=0.4.27
+PyMuPDF>=1.23.0
+
+# Production dependencies
+##emergentintegrations
