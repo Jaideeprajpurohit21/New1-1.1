@@ -20,11 +20,11 @@ jobs:
 
       - name: Add server to known hosts
         run: |
-          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H 18.118.139.58 >> ~/.ssh/known_hosts
 
       - name: Deploy to Lightsail server
         run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
+          ssh ubuntu@18.118.139.58 "
             cd /home/ubuntu/New1-1.1 &&
             git pull &&
             cd backend &&
